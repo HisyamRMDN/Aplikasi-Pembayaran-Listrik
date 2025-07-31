@@ -1,9 +1,6 @@
 # Sistem Pengelolaan Token Listrik
 
-Aplikasi web untuk pengelolaan sistem token listrik yang dibangun menggunakan Laravel 11. Sistem ini memungkinkan pengelolaan pelanggan, pencatatan penggunaan listrik, pembuat tagihan, dan proses pembayaran.
-
-## Link Python dan skenario
--  https://docs.google.com/document/d/1XPdGrETaoqoKniPeNVJIWXpVTBVxVGEVQWSfK9KLsuE/edit?usp=sharing
+Aplikasi web untuk pengelolaan sistem token listrik yang dibangun menggunakan Laravel 12. Sistem ini memungkinkan pengelolaan pelanggan, pencatatan penggunaan listrik, pembuat tagihan, dan proses pembayaran.
 
 ## 🚀 Fitur Utama
 
