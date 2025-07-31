@@ -7,14 +7,38 @@ use App\Models\Pembayaran;
 use App\Models\Tagihan;
 use App\Models\Pelanggan;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class PembayaranController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pembayarans = Pembayaran::with('tagihan', 'pelanggan', 'user')->paginate(10);
-        return view('admin.pembayaran.index', compact('pembayarans'));
+        $query = Pembayaran::with('tagihan', 'pelanggan', 'user');
+
+        // Fitur pencarian berdasarkan nama pelanggan
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('pelanggan', function ($q) use ($search) {
+                $q->where('nama_pelanggan', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Fitur filter berdasarkan tanggal pembayaran
+        if ($request->filled('tanggal')) {
+            $tanggal = Carbon::parse($request->input('tanggal'))->format('Y-m-d');
+            $query->whereDate('tanggal_pembayaran', $tanggal);
+        }
+
+        $pembayarans = $query->latest()->paginate(10)->withQueryString(); // withQueryString agar pagination bawa query
+
+        $today = Carbon::today();
+
+        $jumlahPembayaranHariIni = Pembayaran::whereDate('tanggal_pembayaran', $today)->count();
+        $totalNominalHariIni = Pembayaran::whereDate('tanggal_pembayaran', $today)->sum('total_bayar');
+
+        return view('admin.pembayaran.index', compact('pembayarans', 'jumlahPembayaranHariIni', 'totalNominalHariIni'));
     }
+
 
     public function create()
     {
@@ -133,9 +157,18 @@ class PembayaranController extends Controller
     private function getNamaBulan($bulan)
     {
         $namaBulan = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
         ];
 
         return $namaBulan[$bulan] ?? 'Tidak Diketahui';

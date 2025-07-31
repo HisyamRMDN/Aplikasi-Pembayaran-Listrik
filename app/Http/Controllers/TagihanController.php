@@ -9,9 +9,35 @@ use App\Models\Penggunaan;
 
 class TagihanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tagihans = Tagihan::with('pelanggan', 'penggunaan')->paginate(10);
+        $query = Tagihan::with('pelanggan', 'penggunaan');
+
+        // Filter: search (nama pelanggan atau nomor KWH)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('pelanggan', function ($q) use ($search) {
+                $q->where('nama_pelanggan', 'like', '%' . $search . '%')
+                    ->orWhere('nomor_kwh', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Filter: status
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Filter: bulan
+        if ($request->filled('bulan')) {
+            $query->where('bulan', $request->input('bulan'));
+        }
+
+        // Pagination + sorting (optional: by tahun desc & bulan desc)
+        $tagihans = $query->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc')
+            ->paginate(10)
+            ->appends($request->query()); // penting untuk pagination
+
         return view('admin.tagihan.index', compact('tagihans'));
     }
 

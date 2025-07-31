@@ -17,33 +17,30 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // dd($request->login_type);
         $request->validate([
             'username' => 'required',
             'password' => 'required',
-            'login_type' => 'required|in:admin,pelanggan'
         ]);
 
         $credentials = $request->only('username', 'password');
 
-        if ($request->login_type === 'admin') {
-            // Admin login
-            if (Auth::attempt($credentials)) {
-                $request->session()->regenerate();
-                return redirect()->intended('/dashboard');
-            }
-        } else {
-            // Pelanggan login
-            if (Auth::guard('pelanggan')->attempt($credentials)) {
-                $request->session()->regenerate();
-                return redirect()->intended('/pelanggan/dashboard');
-            }
+        // Coba login sebagai admin (default guard "web")
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended('/dashboard');
+        }
+
+        // Jika gagal, coba login sebagai pelanggan
+        if (Auth::guard('pelanggan')->attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended('/customer/dashboard');
         }
 
         return back()->withErrors([
             'username' => 'Username atau password salah.',
         ])->onlyInput('username');
     }
+
 
     public function logout(Request $request)
     {
@@ -59,7 +56,7 @@ class AuthController extends Controller
     // Pelanggan specific methods
     public function showPelangganLoginForm()
     {
-        return view('auth.pelanggan-login');
+        return view('dashboard.pelanggan');
     }
 
     public function pelangganLogin(Request $request)
@@ -73,7 +70,7 @@ class AuthController extends Controller
 
         if (Auth::guard('pelanggan')->attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/pelanggan/dashboard');
+            return redirect()->intended('/customer/dashboard');
         }
 
         return back()->withErrors([

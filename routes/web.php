@@ -7,10 +7,11 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PenggunaanController;
 use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\PembayaranController;
+use App\Http\Middleware\CheckLevel;
 
 // Public routes
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->name('user.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Pelanggan authentication routes
@@ -38,4 +39,5 @@ Route::middleware('ensure.auth:web')->group(function () {
 Route::middleware('ensure.auth:pelanggan')->group(function () {
     Route::get('/customer/dashboard', [DashboardController::class, 'pelangganDashboard'])->name('pelanggan.dashboard');
     Route::get('/customer/tagihan', [PembayaranController::class, 'pelangganTagihan'])->name('pelanggan.tagihan');
+    Route::get('/customer/penggunaan', [PelangganController::class, 'riwayatPenggunaan'])->name('pelanggan.penggunaan');
 });

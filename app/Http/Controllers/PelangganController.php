@@ -6,23 +6,37 @@ use Illuminate\Http\Request;
 use App\Models\Pelanggan;
 use App\Models\Tarif;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class PelangganController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $pelanggans = Pelanggan::with('tarif')->paginate(10);
+        $query = Pelanggan::with('tarif');
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pelanggan', 'like', '%' . $search . '%')
+                    ->orWhere('nomor_kwh', 'like', '%' . $search . '%');
+            });
+        }
+
+        $pelanggans = $query->paginate(10)->withQueryString(); // penting agar parameter search tetap ada di pagination
+
         return view('admin.pelanggan.index', compact('pelanggans'));
     }
+
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
+        
         $tarifs = Tarif::all();
         return view('admin.pelanggan.create', compact('tarifs'));
     }
@@ -116,5 +130,13 @@ class PelangganController extends Controller
 
         return redirect()->route('pelanggan.index')
             ->with('success', 'Pelanggan berhasil dihapus');
+    }
+
+    public function riwayatPenggunaan()
+    {
+        $pelanggan = Auth::guard('pelanggan')->user();
+        $penggunaan = $pelanggan->penggunaans()->orderByDesc('tahun')->orderByDesc('bulan')->get();
+
+        return view('pelanggan.penggunaan', compact('penggunaan', 'pelanggan'));
     }
 }

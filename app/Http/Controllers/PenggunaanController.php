@@ -12,11 +12,35 @@ class PenggunaanController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $penggunaans = Penggunaan::with('pelanggan')->paginate(10);
+        $query = Penggunaan::with('pelanggan');
+
+        // Filter berdasarkan search query (nama pelanggan atau nomor KWH)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('pelanggan', function ($q) use ($search) {
+                $q->where('nama_pelanggan', 'like', "%{$search}%")
+                    ->orWhere('nomor_kwh', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter berdasarkan bulan
+        if ($request->filled('bulan')) {
+            $query->where('bulan', $request->bulan);
+        }
+
+        // Filter berdasarkan tahun
+        if ($request->filled('tahun')) {
+            $query->where('tahun', $request->tahun);
+        }
+
+        // Ambil data dengan pagination
+        $penggunaans = $query->orderBy('id_penggunaan', 'desc')->paginate(10)->appends($request->all());
+
         return view('admin.penggunaan.index', compact('penggunaans'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -89,6 +113,7 @@ class PenggunaanController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        
         $penggunaan = Penggunaan::findOrFail($id);
 
         $request->validate([
