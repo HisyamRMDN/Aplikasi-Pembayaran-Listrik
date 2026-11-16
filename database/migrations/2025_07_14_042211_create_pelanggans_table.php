@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('pelanggans', function (Blueprint $table) {
             $table->id('id_pelanggan');
-            $table->string('username', 50)->unique();
-            $table->string('password');
+            $table->string('username', 50)->nullable()->unique();
+            $table->string('password')->nullable();
             $table->string('nomor_kwh', 20)->unique();
             $table->string('nama_pelanggan', 100);
             $table->text('alamat');

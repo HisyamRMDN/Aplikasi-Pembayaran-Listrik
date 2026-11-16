@@ -15,7 +15,8 @@ class PelangganController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Pelanggan::with('tarif');
+
+        $query = Pelanggan::with('tarif')->withCount(['penggunaans', 'tagihans']);
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -36,7 +37,7 @@ class PelangganController extends Controller
      */
     public function create()
     {
-        
+
         $tarifs = Tarif::all();
         return view('admin.pelanggan.create', compact('tarifs'));
     }
@@ -47,17 +48,13 @@ class PelangganController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'username' => 'required|string|max:50|unique:pelanggans',
-            'password' => 'required|string|min:6',
-            'nomor_kwh' => 'required|string|max:20|unique:pelanggans',
+            'nomor_kwh' => 'required|numeric|digits_between:11,12|unique:pelanggans,nomor_kwh',
             'nama_pelanggan' => 'required|string|max:100',
             'alamat' => 'required|string',
             'id_tarif' => 'required|exists:tarifs,id_tarif'
         ]);
 
         Pelanggan::create([
-            'username' => $request->username,
-            'password' => Hash::make($request->password),
             'nomor_kwh' => $request->nomor_kwh,
             'nama_pelanggan' => $request->nama_pelanggan,
             'alamat' => $request->alamat,
@@ -65,7 +62,7 @@ class PelangganController extends Controller
         ]);
 
         return redirect()->route('pelanggan.index')
-            ->with('success', 'Pelanggan berhasil ditambahkan');
+            ->with('success', 'Data meteran pelanggan berhasil ditambahkan');
     }
 
     /**
@@ -95,29 +92,21 @@ class PelangganController extends Controller
         $pelanggan = Pelanggan::findOrFail($id);
 
         $request->validate([
-            'username' => 'required|string|max:50|unique:pelanggans,username,' . $id . ',id_pelanggan',
-            'nomor_kwh' => 'required|string|max:20|unique:pelanggans,nomor_kwh,' . $id . ',id_pelanggan',
+            'nomor_kwh' => 'required|numeric|digits_between:11,12|unique:pelanggans,nomor_kwh,' . $id . ',id_pelanggan',
             'nama_pelanggan' => 'required|string|max:100',
             'alamat' => 'required|string',
             'id_tarif' => 'required|exists:tarifs,id_tarif'
         ]);
 
-        $updateData = [
-            'username' => $request->username,
+        $pelanggan->update([
             'nomor_kwh' => $request->nomor_kwh,
             'nama_pelanggan' => $request->nama_pelanggan,
             'alamat' => $request->alamat,
             'id_tarif' => $request->id_tarif
-        ];
-
-        if ($request->password) {
-            $updateData['password'] = Hash::make($request->password);
-        }
-
-        $pelanggan->update($updateData);
+        ]);
 
         return redirect()->route('pelanggan.index')
-            ->with('success', 'Pelanggan berhasil diperbarui');
+            ->with('success', 'Data pelanggan berhasil diperbarui');
     }
 
     /**
@@ -126,6 +115,12 @@ class PelangganController extends Controller
     public function destroy(string $id)
     {
         $pelanggan = Pelanggan::findOrFail($id);
+
+        if ($pelanggan->penggunaans()->exists() || $pelanggan->tagihans()->exists()) {
+            return redirect()->route('pelanggan.index')
+                ->with('error', 'Pelanggan tidak dapat dihapus karena masih memiliki riwayat penggunaan atau tagihan.');
+        }
+
         $pelanggan->delete();
 
         return redirect()->route('pelanggan.index')

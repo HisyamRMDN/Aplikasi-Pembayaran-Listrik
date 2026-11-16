@@ -10,6 +10,47 @@ use App\Models\Pelanggan;
 
 class AuthController extends Controller
 {
+
+    public function showActivateForm()
+    {
+        return view('auth.activate');
+    }
+
+    public function activateAccount(Request $request)
+    {
+        $request->validate([
+            'nomor_kwh' => 'required|numeric|digits_between:11,12',
+            'username'  => 'required|string|max:50|unique:pelanggans,username|unique:users,username',
+            'password'  => 'required|string|min:6|confirmed',
+        ], [
+            'username.unique'    => 'Username sudah digunakan, silakan pilih username lain.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+        ]);
+
+        $pelanggan = Pelanggan::where('nomor_kwh', $request->nomor_kwh)->first();
+
+        if (!$pelanggan) {
+            return back()->withErrors([
+                'nomor_kwh' => 'Nomor KWH tidak ditemukan. Pastikan meteran Anda sudah didaftarkan petugas.',
+            ])->withInput();
+        }
+
+        if (!is_null($pelanggan->username)) {
+            return back()->withErrors([
+                'nomor_kwh' => 'Nomor KWH ini sudah memiliki akun aktif. Silakan langsung masuk.',
+            ])->withInput();
+        }
+
+        $pelanggan->update([
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
+        ]);
+
+        Auth::guard('pelanggan')->login($pelanggan);
+        $request->session()->regenerate();
+
+        return redirect('/customer/dashboard');
+    }
     public function showLoginForm()
     {
         return view('auth.login');
@@ -56,7 +97,7 @@ class AuthController extends Controller
     // Pelanggan specific methods
     public function showPelangganLoginForm()
     {
-        return view('dashboard.pelanggan');
+        return view('auth.login');
     }
 
     public function pelangganLogin(Request $request)

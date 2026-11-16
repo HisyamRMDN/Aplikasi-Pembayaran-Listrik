@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Pelanggan;
 use App\Models\Penggunaan;
@@ -14,19 +13,26 @@ class DashboardController extends Controller
 {
     public function index()
     {
-
         $totalPelanggan = Pelanggan::count();
         $totalPenggunaan = Penggunaan::count();
         $totalTagihan = Tagihan::count();
         $totalPembayaran = Pembayaran::count();
         $tagihanBelumLunas = Tagihan::where('status', 'belum_lunas')->count();
 
+        $tagihanTerbaru = Tagihan::with(['pelanggan.tarif'])
+            ->orderByDesc('tahun')
+            ->orderByDesc('bulan')
+            ->orderByDesc('id_tagihan')
+            ->limit(6)
+            ->get();
+
         return view('dashboard.admin', compact(
             'totalPelanggan',
             'totalPenggunaan',
             'totalTagihan',
             'totalPembayaran',
-            'tagihanBelumLunas'
+            'tagihanBelumLunas',
+            'tagihanTerbaru'
         ));
     }
 

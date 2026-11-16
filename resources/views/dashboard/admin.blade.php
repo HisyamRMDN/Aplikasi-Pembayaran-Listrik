@@ -1,179 +1,206 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Admin')
+@section('title', 'Dashboard — VOLTPAY')
 
 @section('content')
-    <div class="min-h-screen bg-gray-50 p-6">
-        <div class="mb-12">
-            <h1 class="text-3xl font-light text-gray-900 mb-2">Dashboard</h1>
-            <p class="text-gray-600">Sistem pembayaran listrik pascabayar</p>
-        </div>
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <!-- Total Pelanggan -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6 hover:border-gray-300 transition-colors">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z">
-                            </path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="space-y-1">
-                    <p class="text-2xl font-semibold text-gray-900">{{ $totalPelanggan }}</p>
-                    <p class="text-sm text-gray-600">Total Pelanggan</p>
-                </div>
+        <!-- Header Bar + Aksi Cepat -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200 pb-6">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-zinc-950">Ringkasan Operasional</h1>
+                <p class="text-sm text-zinc-500 mt-1">Monitoring pelanggan, pemakaian kWh, dan status penagihan</p>
             </div>
-
-            <!-- Data Penggunaan -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6 hover:border-gray-300 transition-colors">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                            </path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="space-y-1">
-                    <p class="text-2xl font-semibold text-gray-900">{{ $totalPenggunaan }}</p>
-                    <p class="text-sm text-gray-600">Data Penggunaan</p>
-                </div>
-            </div>
-
-            <!-- Total Tagihan -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6 hover:border-gray-300 transition-colors">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                            </path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="space-y-1">
-                    <p class="text-2xl font-semibold text-gray-900">{{ $totalTagihan }}</p>
-                    <p class="text-sm text-gray-600">Total Tagihan</p>
-                </div>
-            </div>
-
-            <!-- Total Pembayaran -->
-            <div class="bg-white rounded-lg border border-gray-200 p-6 hover:border-gray-300 transition-colors">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
-                            </path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="space-y-1">
-                    <p class="text-2xl font-semibold text-gray-900">{{ $totalPembayaran }}</p>
-                    <p class="text-sm text-gray-600">Total Pembayaran</p>
-                </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+                <a href="{{ route('pelanggan.create') }}"
+                    class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 hover:border-zinc-300 transition-colors">
+                    <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Pelanggan Baru
+                </a>
+                <a href="{{ route('penggunaan.create') }}"
+                    class="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Catat Meter kWh
+                </a>
             </div>
         </div>
 
-        <!-- Clean Alert -->
+        <!-- Banner Peringatan Tagihan Belum Lunas (Minimalis & Actionable) -->
         @if ($tagihanBelumLunas > 0)
-            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-12">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <svg class="w-5 h-5 text-red-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-3 flex-1">
-                        <p class="text-sm text-red-800">
-                            <span class="font-medium">Perhatian:</span>
-                            Terdapat {{ $tagihanBelumLunas }} tagihan yang belum lunas.
-                        </p>
-                    </div>
+            <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3.5">
+                <div class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                    <p class="text-xs sm:text-sm text-amber-950">
+                        Terdapat <span class="font-semibold">{{ $tagihanBelumLunas }} tagihan</span> berstatus belum lunas
+                        yang menunggu pembayaran.
+                    </p>
                 </div>
+                <a href="{{ route('tagihan.index') }}"
+                    class="text-xs font-semibold text-amber-900 hover:text-amber-700 underline underline-offset-4 shrink-0">
+                    Tinjau Tagihan →
+                </a>
             </div>
         @endif
 
-        <!-- Simple Quick Actions -->
-        <div class="bg-white rounded-lg border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-medium text-gray-900">Menu Utama</h2>
-            </div>
-
-            <div class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <a href="{{ route('pelanggan.create') }}"
-                        class="group flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-all">
-                        <div
-                            class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-900 group-hover:text-blue-700">Tambah Pelanggan</p>
-                            <p class="text-xs text-gray-500">Daftar pelanggan baru</p>
-                        </div>
-                    </a>
-
-                    <a href="{{ route('penggunaan.create') }}"
-                        class="group flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-emerald-300 transition-all">
-                        <div
-                            class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
-                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                                </path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-900 group-hover:text-emerald-700">Input Penggunaan</p>
-                            <p class="text-xs text-gray-500">Catat meter listrik</p>
-                        </div>
-                    </a>
-
-                    <a href="{{ route('tagihan.index') }}"
-                        class="group flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-amber-300 transition-all">
-                        <div
-                            class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center group-hover:bg-amber-100 transition-colors">
-                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-900 group-hover:text-amber-700">Kelola Tagihan</p>
-                            <p class="text-xs text-gray-500">Management billing</p>
-                        </div>
-                    </a>
-
-                    <a href="{{ route('pembayaran.create') }}"
-                        class="group flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-purple-300 transition-all">
-                        <div
-                            class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
-                                </path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-900 group-hover:text-purple-700">Proses Pembayaran</p>
-                            <p class="text-xs text-gray-500">Validasi payment</p>
-                        </div>
+        <!-- Metric Grid Monokromatik (Tanpa Ikon Pastel Warna-warni) -->
+        <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-zinc-200 border border-zinc-200 rounded-xl overflow-hidden">
+            <!-- Total Pelanggan -->
+            <div class="bg-white p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-zinc-500">Total Pelanggan</span>
+                    <a href="{{ route('pelanggan.index') }}"
+                        class="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">
+                        Detail →
                     </a>
                 </div>
+                <p class="mt-4 text-3xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                    {{ number_format($totalPelanggan) }}
+                </p>
+                <p class="mt-1 text-xs text-zinc-400">Meteran terdaftar aktif</p>
+            </div>
+
+            <!-- Data Penggunaan -->
+            <div class="bg-white p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-zinc-500">Catatan Meter</span>
+                    <a href="{{ route('penggunaan.index') }}"
+                        class="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">
+                        Detail →
+                    </a>
+                </div>
+                <p class="mt-4 text-3xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                    {{ number_format($totalPenggunaan) }}
+                </p>
+                <p class="mt-1 text-xs text-zinc-400">Periode pemakaian tercatat</p>
+            </div>
+
+            <!-- Total Tagihan -->
+            <div class="bg-white p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-zinc-500">Total Tagihan</span>
+                    <a href="{{ route('tagihan.index') }}"
+                        class="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">
+                        Detail →
+                    </a>
+                </div>
+                <p class="mt-4 text-3xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                    {{ number_format($totalTagihan) }}
+                </p>
+                <p class="mt-1 text-xs text-zinc-400">{{ $tagihanBelumLunas }} belum lunas</p>
+            </div>
+
+            <!-- Total Pembayaran -->
+            <div class="bg-white p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-zinc-500">Transaksi Lunas</span>
+                    <a href="{{ route('pembayaran.index') }}"
+                        class="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">
+                        Detail →
+                    </a>
+                </div>
+                <p class="mt-4 text-3xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                    {{ number_format($totalPembayaran) }}
+                </p>
+                <p class="mt-1 text-xs text-zinc-400">Pembayaran tervalidasi</p>
             </div>
         </div>
+
+        <!-- Tabel Tagihan Terbaru -->
+        <div class="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-zinc-200 flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm font-semibold text-zinc-950">Tagihan Terbaru</h2>
+                    <p class="text-xs text-zinc-500 mt-0.5">Daftar tagihan listrik pelanggan pada periode terkini</p>
+                </div>
+                <a href="{{ route('tagihan.index') }}"
+                    class="text-xs font-medium text-zinc-600 hover:text-zinc-950 transition-colors">
+                    Lihat Semua
+                </a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-zinc-200 text-sm">
+                    <thead class="bg-zinc-50/70">
+                        <tr>
+                            <th
+                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                Pelanggan</th>
+                            <th
+                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                Nomor KWH</th>
+                            <th
+                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                Periode</th>
+                            <th
+                                class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                Pemakaian</th>
+                            <th
+                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                Status</th>
+                            <th
+                                class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-100 bg-white">
+                        @forelse ($tagihanTerbaru as $item)
+                            <tr class="hover:bg-zinc-50/70 transition-colors">
+                                <td class="px-5 py-3.5 whitespace-nowrap font-medium text-zinc-900">
+                                    {{ $item->pelanggan->nama_pelanggan ?? '-' }}
+                                </td>
+                                <td class="px-5 py-3.5 whitespace-nowrap font-mono text-xs text-zinc-600">
+                                    {{ $item->pelanggan->nomor_kwh ?? '-' }}
+                                </td>
+                                <td class="px-5 py-3.5 whitespace-nowrap text-zinc-600">
+                                    {{ str_pad($item->bulan, 2, '0', STR_PAD_LEFT) }}/{{ $item->tahun }}
+                                </td>
+                                <td class="px-5 py-3.5 whitespace-nowrap text-right font-medium text-zinc-900 tabular-nums">
+                                    {{ number_format($item->jumlah_meter) }} kWh
+                                </td>
+                                <td class="px-5 py-3.5 whitespace-nowrap">
+                                    @if ($item->status === 'lunas')
+                                        <span
+                                            class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            Lunas
+                                        </span>
+                                    @else
+                                        <span
+                                            class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            Belum Lunas
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-3.5 whitespace-nowrap text-right text-xs font-medium">
+                                    @if ($item->status !== 'lunas')
+                                        <a href="{{ route('pembayaran.create') }}"
+                                            class="inline-flex items-center rounded-md bg-zinc-950 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 transition-colors">
+                                            Proses Bayar
+                                        </a>
+                                    @else
+                                        <span class="text-zinc-400">Selesai</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-5 py-8 text-center text-xs text-zinc-400">
+                                    Belum ada data tagihan tercatat.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 @endsection
