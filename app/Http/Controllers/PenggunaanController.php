@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Penggunaan;
 use App\Models\Pelanggan;
 use App\Models\Tagihan;
+use Illuminate\Support\Facades\DB;
 
 class PenggunaanController extends Controller
 {
@@ -55,19 +56,22 @@ class PenggunaanController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        $request->validate([
-            'id_pelanggan' => 'required|exists:pelanggans,id_pelanggan',
-            'bulan' => 'required|integer|min:1|max:12',
-            'tahun' => 'required|integer|min:2020',
-            'meter_awal' => 'required|integer|min:0',
-            'meter_akhir' => 'required|integer|min:0|gt:meter_awal'
-        ]);
+{
+    $request->validate([
+        'id_pelanggan' => 'required|exists:pelanggans,id_pelanggan',
+        'bulan' => 'required|integer|min:1|max:12',
+        'tahun' => 'required|integer|min:2020',
+        'meter_awal' => 'required|integer|min:0',
+        'meter_akhir' => 'required|integer|min:0|gt:meter_awal'
+    ]);
 
-        // Check if usage already exists for this customer in this month/year
+    // Gunakan DB::transaction untuk menjaga integritas data
+    return DB::transaction(function () use ($request) {
+        // Cek duplikasi dengan lockForUpdate untuk mencegah race condition
         $existingUsage = Penggunaan::where('id_pelanggan', $request->id_pelanggan)
             ->where('bulan', $request->bulan)
             ->where('tahun', $request->tahun)
+            ->lockForUpdate()
             ->first();
 
         if ($existingUsage) {
@@ -82,12 +86,13 @@ class PenggunaanController extends Controller
             'meter_akhir' => $request->meter_akhir
         ]);
 
-        // Auto-generate tagihan
+        // Auto-generate tagihan dalam satu transaksi yang sama
         $this->generateTagihan($penggunaan);
 
         return redirect()->route('penggunaan.index')
             ->with('success', 'Data penggunaan berhasil ditambahkan dan tagihan otomatis dibuat');
-    }
+    });
+}
 
     /**
      * Display the specified resource.
@@ -113,7 +118,7 @@ class PenggunaanController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        
+
         $penggunaan = Penggunaan::findOrFail($id);
 
         $request->validate([

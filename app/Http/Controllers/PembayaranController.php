@@ -8,6 +8,7 @@ use App\Models\Tagihan;
 use App\Models\Pelanggan;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class PembayaranController extends Controller
 {
@@ -49,25 +50,25 @@ class PembayaranController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'id_tagihan' => 'required|exists:tagihans,id_tagihan',
-            'tanggal_pembayaran' => 'required|date',
-            'biaya_admin' => 'required|numeric|min:0',
-        ]);
+{
+    $request->validate([
+        'id_tagihan' => 'required|exists:tagihans,id_tagihan',
+        'tanggal_pembayaran' => 'required|date',
+        'biaya_admin' => 'required|numeric|min:0',
+    ]);
 
-        $tagihan = Tagihan::with('pelanggan')->findOrFail($request->id_tagihan);
+    return DB::transaction(function () use ($request) {
+        // Gunakan lockForUpdate agar aman dari race condition
+        $tagihan = Tagihan::where('id_tagihan', $request->id_tagihan)
+            ->lockForUpdate()
+            ->firstOrFail();
 
-        // Check if tagihan is already paid
         if ($tagihan->status === 'lunas') {
-            return back()->withErrors(['error' => 'Tagihan sudah lunas']);
+            throw new \Exception('Tagihan sudah lunas'); // Atau return back()
         }
 
-        // Calculate total payment
-        $totalTagihan = $tagihan->total_tagihan;
-        $totalBayar = $totalTagihan + $request->biaya_admin;
+        $totalBayar = $tagihan->total_tagihan + $request->biaya_admin;
 
-        // Create payment record
         $pembayaran = Pembayaran::create([
             'id_tagihan' => $request->id_tagihan,
             'id_pelanggan' => $tagihan->id_pelanggan,
@@ -78,12 +79,12 @@ class PembayaranController extends Controller
             'id_user' => Auth::id()
         ]);
 
-        // Update tagihan status
         $tagihan->update(['status' => 'lunas']);
 
         return redirect()->route('pembayaran.index')
             ->with('success', 'Pembayaran berhasil diproses');
-    }
+    });
+}
 
     public function show(string $id)
     {

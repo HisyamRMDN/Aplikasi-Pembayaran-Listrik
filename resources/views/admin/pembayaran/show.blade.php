@@ -1,181 +1,199 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Pembayaran')
+@section('title', 'Detail Pembayaran — VOLTPAY')
 
 @section('content')
-<div class="p-6">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Detail Pembayaran</h1>
-            <p class="text-gray-600">Informasi lengkap pembayaran listrik</p>
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200 pb-6">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-zinc-950">Bukti Pembayaran
+                    #{{ $pembayaran->id_pembayaran }}</h1>
+                <p class="text-xs text-zinc-500 mt-1">
+                    Divalidasi pada {{ date('d F Y', strtotime($pembayaran->tanggal_pembayaran)) }}
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+                <a href="{{ route('pembayaran.index') }}"
+                    class="rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors">
+                    ← Riwayat Pembayaran
+                </a>
+                <a href="{{ route('pembayaran.edit', $pembayaran->id_pembayaran) }}"
+                    class="rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 transition-colors">
+                    Edit
+                </a>
+                <button type="button" onclick="window.print()"
+                    class="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+                    </svg>
+                    Cetak Struk
+                </button>
+            </div>
         </div>
-        <div class="space-x-2">
-            <a href="{{ route('pembayaran.edit', $pembayaran->id_pembayaran) }}"
-               class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium">
-                Edit Pembayaran
-            </a>
-            <a href="{{ route('pembayaran.index') }}"
-               class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium">
-                Kembali
-            </a>
-        </div>
-    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Informasi Pembayaran -->
-        <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Informasi Pembayaran</h2>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ID Pembayaran</label>
-                        <p class="text-sm text-gray-900 font-mono">{{ $pembayaran->id_pembayaran }}</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Pembayaran</label>
-                        <p class="text-sm text-gray-900">{{ date('d F Y', strtotime($pembayaran->tanggal_pembayaran)) }}</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Bulan Bayar</label>
-                        <p class="text-sm text-gray-900">{{ $pembayaran->bulan_bayar }}</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Petugas</label>
-                        <p class="text-sm text-gray-900">{{ $pembayaran->user->name ?? 'N/A' }}</p>
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Area Struk / Informasi Utama (Ikut Tercetak saat Print) -->
+            <div class="lg:col-span-2 space-y-6 print-section">
+                <!-- Informasi Pembayaran -->
+                <div class="bg-white border border-zinc-200 rounded-xl p-6 space-y-5">
+                    <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
+                        <h2 class="text-sm font-semibold text-zinc-950">Informasi Transaksi</h2>
+                        <span
+                            class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                             Lunas
                         </span>
                     </div>
-                </div>
-            </div>
 
-            <!-- Detail Tagihan -->
-            <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Detail Tagihan</h2>
+                    <div class="grid grid-cols-2 gap-5 text-sm">
+                        <div>
+                            <p class="text-xs text-zinc-400">ID Pembayaran</p>
+                            <p class="font-mono font-medium text-zinc-900 mt-0.5">#{{ $pembayaran->id_pembayaran }}</p>
+                        </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ID Tagihan</label>
-                        <p class="text-sm text-gray-900 font-mono">{{ $pembayaran->tagihan->id_tagihan }}</p>
-                    </div>
+                        <div>
+                            <p class="text-xs text-zinc-400">Tanggal Pembayaran</p>
+                            <p class="font-medium text-zinc-900 mt-0.5">
+                                {{ date('d F Y', strtotime($pembayaran->tanggal_pembayaran)) }}</p>
+                        </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Periode Tagihan</label>
-                        <p class="text-sm text-gray-900">
-                            {{ DateTime::createFromFormat('!m', $pembayaran->tagihan->bulan)->format('F') }} {{ $pembayaran->tagihan->tahun }}
-                        </p>
-                    </div>
+                        <div>
+                            <p class="text-xs text-zinc-400">Bulan Bayar</p>
+                            <p class="font-medium text-zinc-900 mt-0.5">{{ $pembayaran->bulan_bayar }}</p>
+                        </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah kWh</label>
-                        <p class="text-sm text-gray-900">{{ number_format($pembayaran->tagihan->jumlah_meter, 0, ',', '.') }} kWh</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tarif per kWh</label>
-                        <p class="text-sm text-gray-900">Rp {{ number_format($pembayaran->tagihan->pelanggan->tarif->tarif_per_kwh, 0, ',', '.') }}</p>
-                    </div>
-
-                    @if($pembayaran->tagihan->penggunaan)
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Meter Awal</label>
-                        <p class="text-sm text-gray-900">{{ number_format($pembayaran->tagihan->penggunaan->meter_awal, 0, ',', '.') }}</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Meter Akhir</label>
-                        <p class="text-sm text-gray-900">{{ number_format($pembayaran->tagihan->penggunaan->meter_akhir, 0, ',', '.') }}</p>
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- Summary dan Informasi Pelanggan -->
-        <div class="space-y-6">
-            <!-- Informasi Pelanggan -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Informasi Pelanggan</h2>
-
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Pelanggan</label>
-                        <p class="text-sm text-gray-900">{{ $pembayaran->pelanggan->nama_pelanggan }}</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nomor KWH</label>
-                        <p class="text-sm text-gray-900 font-mono">{{ $pembayaran->pelanggan->nomor_kwh }}</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
-                        <p class="text-sm text-gray-900">{{ $pembayaran->pelanggan->alamat }}</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tarif</label>
-                        <p class="text-sm text-gray-900">{{ $pembayaran->pelanggan->tarif->daya }}VA - {{ $pembayaran->pelanggan->tarif->tarif_per_kwh }}/kWh</p>
+                        <div>
+                            <p class="text-xs text-zinc-400">Petugas Loket</p>
+                            <p class="font-medium text-zinc-900 mt-0.5">
+                                {{ $pembayaran->user->nama_admin ?? ($pembayaran->user->name ?? 'N/A') }}
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Ringkasan Pembayaran -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Ringkasan Pembayaran</h2>
+                <!-- Detail Tagihan & Meter -->
+                <div class="bg-white border border-zinc-200 rounded-xl p-6 space-y-5">
+                    <h2 class="text-sm font-semibold text-zinc-950 border-b border-zinc-100 pb-3">Rincian Pemakaian &
+                        Tagihan</h2>
 
-                <div class="space-y-3">
-                    <div class="flex justify-between py-2">
-                        <span class="text-sm text-gray-600">Total Tagihan</span>
-                        <span class="text-sm font-medium text-gray-900">
-                            Rp {{ number_format($pembayaran->tagihan->total_tagihan, 0, ',', '.') }}
-                        </span>
-                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-5 text-sm">
+                        <div>
+                            <p class="text-xs text-zinc-400">ID Tagihan</p>
+                            <p class="font-mono font-medium text-zinc-900 mt-0.5">#{{ $pembayaran->tagihan->id_tagihan }}
+                            </p>
+                        </div>
 
-                    <div class="flex justify-between py-2">
-                        <span class="text-sm text-gray-600">Biaya Admin</span>
-                        <span class="text-sm font-medium text-gray-900">
-                            Rp {{ number_format($pembayaran->biaya_admin, 0, ',', '.') }}
-                        </span>
-                    </div>
+                        <div>
+                            <p class="text-xs text-zinc-400">Periode Pemakaian</p>
+                            <p class="font-medium text-zinc-900 mt-0.5">
+                                {{ DateTime::createFromFormat('!m', $pembayaran->tagihan->bulan)->format('F') }}
+                                {{ $pembayaran->tagihan->tahun }}
+                            </p>
+                        </div>
 
-                    <div class="border-t border-gray-200 pt-2">
-                        <div class="flex justify-between py-2">
-                            <span class="text-base font-medium text-gray-900">Total Bayar</span>
-                            <span class="text-base font-bold text-green-600">
-                                Rp {{ number_format($pembayaran->total_bayar, 0, ',', '.') }}
-                            </span>
+                        <div>
+                            <p class="text-xs text-zinc-400">Tarif per kWh</p>
+                            <p class="font-medium text-zinc-900 tabular-nums mt-0.5">
+                                Rp {{ number_format($pembayaran->tagihan->pelanggan->tarif->tarif_per_kwh, 2) }}
+                            </p>
+                        </div>
+
+                        @if ($pembayaran->tagihan->penggunaan)
+                            <div>
+                                <p class="text-xs text-zinc-400">Stand Meter Awal</p>
+                                <p class="font-medium text-zinc-900 tabular-nums mt-0.5">
+                                    {{ number_format($pembayaran->tagihan->penggunaan->meter_awal, 0, ',', '.') }}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs text-zinc-400">Stand Meter Akhir</p>
+                                <p class="font-medium text-zinc-900 tabular-nums mt-0.5">
+                                    {{ number_format($pembayaran->tagihan->penggunaan->meter_akhir, 0, ',', '.') }}
+                                </p>
+                            </div>
+                        @endif
+
+                        <div>
+                            <p class="text-xs text-zinc-400">Total Pemakaian</p>
+                            <p class="font-semibold text-zinc-950 tabular-nums mt-0.5">
+                                {{ number_format($pembayaran->tagihan->jumlah_meter, 0, ',', '.') }} kWh
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Actions -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Aksi</h2>
+            <!-- Kolom Kanan: Pelanggan, Ringkasan Nominal & Pembatalan -->
+            <div class="space-y-6">
+                <!-- Informasi Pelanggan -->
+                <div class="bg-white border border-zinc-200 rounded-xl p-6 space-y-4">
+                    <h2 class="text-sm font-semibold text-zinc-950 border-b border-zinc-100 pb-3">Data Pelanggan</h2>
 
-                <div class="space-y-3">
-                    <button onclick="window.print()"
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium">
-                        Cetak Struk
-                    </button>
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <p class="text-xs text-zinc-400">Nama Pelanggan</p>
+                            <p class="font-medium text-zinc-900 mt-0.5">{{ $pembayaran->pelanggan->nama_pelanggan }}</p>
+                        </div>
 
-                    <form action="{{ route('pembayaran.destroy', $pembayaran->id_pembayaran) }}"
-                          method="POST"
-                          onsubmit="return confirm('Yakin ingin membatalkan pembayaran ini? Tagihan akan kembali menjadi belum lunas.')">
+                        <div>
+                            <p class="text-xs text-zinc-400">Nomor KWH</p>
+                            <p class="font-mono text-zinc-900 mt-0.5">{{ $pembayaran->pelanggan->nomor_kwh }}</p>
+                        </div>
+
+                        <div>
+                            <p class="text-xs text-zinc-400">Golongan Daya</p>
+                            <p class="font-medium text-zinc-900 mt-0.5">
+                                {{ number_format($pembayaran->pelanggan->tarif->daya) }} VA
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="text-xs text-zinc-400">Alamat</p>
+                            <p class="text-zinc-600 text-xs leading-relaxed mt-0.5">{{ $pembayaran->pelanggan->alamat }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ringkasan Pembayaran -->
+                <div class="bg-white border border-zinc-200 rounded-xl p-6 space-y-4">
+                    <h2 class="text-sm font-semibold text-zinc-950 border-b border-zinc-100 pb-3">Ringkasan Biaya</h2>
+
+                    <div class="space-y-2.5 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-zinc-500">Pokok Tagihan</span>
+                            <span class="font-medium text-zinc-900 tabular-nums">
+                                Rp {{ number_format($pembayaran->tagihan->total_tagihan, 0, ',', '.') }}
+                            </span>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <span class="text-zinc-500">Biaya Admin</span>
+                            <span class="font-medium text-zinc-900 tabular-nums">
+                                Rp {{ number_format($pembayaran->biaya_admin, 0, ',', '.') }}
+                            </span>
+                        </div>
+
+                        <div class="border-t border-zinc-200 pt-3 mt-3 flex justify-between items-baseline">
+                            <span class="text-sm font-semibold text-zinc-950">Total Bayar</span>
+                            <span class="text-xl font-bold text-zinc-950 tabular-nums">
+                                Rp {{ number_format($pembayaran->total_bayar, 0, ',', '.') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batalkan Pembayaran -->
+                <div class="bg-white border border-zinc-200 rounded-xl p-5">
+                    <form action="{{ route('pembayaran.destroy', $pembayaran->id_pembayaran) }}" method="POST"
+                        onsubmit="return confirm('Yakin ingin membatalkan pembayaran ini? Tagihan akan kembali menjadi belum lunas.')">
                         @csrf
                         @method('DELETE')
                         <button type="submit"
-                                class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-medium">
+                            class="w-full rounded-lg border border-red-200 bg-red-50/60 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors cursor-pointer">
                             Batalkan Pembayaran
                         </button>
                     </form>
@@ -183,22 +201,24 @@
             </div>
         </div>
     </div>
-</div>
 
-<style>
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    .print-section, .print-section * {
-        visibility: visible;
-    }
-    .print-section {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-    }
-}
-</style>
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            .print-section,
+            .print-section * {
+                visibility: visible;
+            }
+
+            .print-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+    </style>
 @endsection

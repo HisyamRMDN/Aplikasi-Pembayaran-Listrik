@@ -10,11 +10,6 @@
             <p class="text-gray-600">Daftar tagihan listrik Anda</p>
         </div>
 
-        <?php
-        // echo '<pre>';
-        // echo print_r($tagihans);
-        // echo '</pre>';
-        ?>
         <!-- Tagihan List -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             @if ($tagihans->count() > 0)
