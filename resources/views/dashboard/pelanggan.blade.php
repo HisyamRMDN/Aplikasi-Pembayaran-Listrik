@@ -1,152 +1,149 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Pelanggan')
+@section('title', 'Ringkasan Akun — VOLTPAY')
 
 @section('content')
-    <div class="p-6">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">Dashboard Pelanggan</h1>
-            <p class="text-gray-600">Selamat datang, {{ $pelanggan->nama_pelanggan }}</p>
-            <div class="mt-2 text-sm text-gray-500">
-                <p>Nomor KWH: {{ $pelanggan->nomor_kwh }}</p>
-                <p>Tarif: {{ $pelanggan->tarif->daya }} VA - Rp {{ number_format($pelanggan->tarif->tarif_per_kwh, 2) }}/kWh
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Header Bar + Aksi Cepat -->
+        <x-page-header title="Selamat datang, {{ $pelanggan->nama_pelanggan }}"
+            subtitle="Ringkasan pemakaian listrik dan status tagihan pascabayar Anda">
+            <x-slot:actions>
+                <a href="{{ route('pelanggan.penggunaan') }}"
+                    class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 hover:border-zinc-300 transition-colors">
+                    Riwayat Penggunaan
+                </a>
+                <a href="{{ route('pelanggan.tagihan') }}"
+                    class="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors">
+                    Lihat Semua Tagihan
+                </a>
+            </x-slot:actions>
+        </x-page-header>
+
+        <!-- Banner Peringatan Tagihan Belum Lunas -->
+        @if ($tagihanBelumLunas > 0)
+            <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3.5">
+                <div class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                    <p class="text-xs sm:text-sm text-amber-950">
+                        Anda memiliki <span class="font-semibold">{{ $tagihanBelumLunas }} tagihan</span> yang belum lunas.
+                        Silakan segera selesaikan pembayaran melalui loket resmi.
+                    </p>
+                </div>
+                <a href="{{ route('pelanggan.tagihan') }}"
+                    class="text-xs font-semibold text-amber-900 hover:text-amber-700 underline underline-offset-4 shrink-0">
+                    Rincian Tagihan →
+                </a>
+            </div>
+        @endif
+
+        <!-- Metric Grid Informasi Meteran & Status -->
+        @php
+            $pemakaianTerakhir = $penggunaan->first();
+        @endphp
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-zinc-200 border border-zinc-200 rounded-xl overflow-hidden">
+            <!-- Identitas Meteran -->
+            <div class="bg-white p-5 flex flex-col justify-between">
+                <span class="text-xs font-medium text-zinc-500">Nomor KWH / IDPEL</span>
+                <p class="mt-3 text-2xl font-bold font-mono tracking-tight text-zinc-950">
+                    {{ $pelanggan->nomor_kwh }}
+                </p>
+                <p class="mt-1 text-xs text-zinc-400">
+                    Daya {{ number_format($pelanggan->tarif->daya) }} VA • Rp
+                    {{ number_format($pelanggan->tarif->tarif_per_kwh, 2) }}/kWh
+                </p>
+            </div>
+
+            <!-- Pemakaian Periode Terakhir -->
+            <div class="bg-white p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-zinc-500">Pemakaian Terakhir</span>
+                    <a href="{{ route('pelanggan.penggunaan') }}"
+                        class="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">
+                        Riwayat →
+                    </a>
+                </div>
+                <p class="mt-3 text-2xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                    {{ $pemakaianTerakhir ? number_format($pemakaianTerakhir->jumlah_meter) . ' kWh' : '0 kWh' }}
+                </p>
+                <p class="mt-1 text-xs text-zinc-400">
+                    @if ($pemakaianTerakhir)
+                        Periode
+                        {{ \Carbon\Carbon::create()->month((int) $pemakaianTerakhir->bulan)->translatedFormat('F') }}
+                        {{ $pemakaianTerakhir->tahun }}
+                    @else
+                        Belum ada catatan meter
+                    @endif
+                </p>
+            </div>
+
+            <!-- Status Tagihan -->
+            <div class="bg-white p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-zinc-500">Tagihan Belum Lunas</span>
+                    <a href="{{ route('pelanggan.tagihan') }}"
+                        class="text-xs text-zinc-400 hover:text-zinc-900 transition-colors">
+                        Detail →
+                    </a>
+                </div>
+                <p class="mt-3 text-2xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                    {{ $tagihanBelumLunas }} <span class="text-sm font-normal text-zinc-400">tagihan</span>
+                </p>
+                <p class="mt-1 text-xs text-zinc-400">
+                    {{ $tagihanBelumLunas > 0 ? 'Menunggu pelunasan' : 'Seluruh tagihan sudah lunas' }}
                 </p>
             </div>
         </div>
 
-        <!-- Alert for unpaid bills -->
-        @if ($tagihanBelumLunas > 0)
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">Tagihan Belum Lunas</h3>
-                        <div class="mt-2 text-sm text-red-700">
-                            <p>Anda memiliki {{ $tagihanBelumLunas }} tagihan yang belum lunas. Silakan lakukan pembayaran
-                                segera.</p>
-                        </div>
-                    </div>
+        <!-- Tabel Tagihan Terbaru -->
+        <div class="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-zinc-200 flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm font-semibold text-zinc-950">Tagihan Terbaru</h2>
+                    <p class="text-xs text-zinc-500 mt-0.5">Ringkasan tagihan listrik periode terakhir</p>
                 </div>
+                <a href="{{ route('pelanggan.tagihan') }}"
+                    class="text-xs font-medium text-zinc-600 hover:text-zinc-950 transition-colors">
+                    Lihat Semua
+                </a>
             </div>
-        @endif
 
-        <!-- Quick Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <a href="{{ route('pelanggan.tagihan') }}"
-                class="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-6 text-center transition-colors">
-                <svg class="h-12 w-12 text-blue-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                    </path>
-                </svg>
-                <h3 class="text-lg font-medium text-blue-900">Lihat Tagihan</h3>
-                <p class="text-sm text-blue-700 mt-2">Lihat semua tagihan listrik Anda</p>
-            </a>
-
-            <a href="{{ route('pelanggan.penggunaan') }}"
-                class="bg-green-50 hover:bg-blue-100 border border-green-200 rounded-lg p-6 text-center">
-                <svg class="h-12 w-12 text-green-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                    </path>
-                </svg>
-                <h3 class="text-lg font-medium text-green-900">Riwayat Penggunaan</h3>
-                <p class="text-sm text-green-700 mt-2">Lihat riwayat penggunaan listrik Anda</p>
-            </a>
-        </div>
-
-        <!-- Recent Usage -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 class="text-lg font-medium text-gray-900 mb-4">Penggunaan Terbaru</h2>
-            @if ($penggunaan->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Bulan/Tahun</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Meter Awal</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Meter Akhir</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Penggunaan (kWh)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach ($penggunaan as $item)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $item->bulan }}/{{ $item->tahun }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ number_format($item->meter_awal) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ number_format($item->meter_akhir) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ number_format($item->jumlah_meter) }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @else
-                <p class="text-gray-500 text-center py-8">Belum ada data penggunaan</p>
-            @endif
-        </div>
-
-        <!-- Recent Bills -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-            <h2 class="text-lg font-medium text-gray-900 mb-4">Tagihan Terbaru</h2>
             @if ($tagihan->count() > 0)
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full divide-y divide-zinc-200 text-sm">
+                        <thead class="bg-zinc-50/70">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Bulan/Tahun</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Jumlah Meter</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                    Periode</th>
+                                <th
+                                    class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                    Pemakaian</th>
+                                <th
+                                    class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                                     Total Tagihan</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                                     Status</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="divide-y divide-zinc-100 bg-white">
                             @foreach ($tagihan as $item)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $item->bulan }}/{{ $item->tahun }}
+                                <tr class="hover:bg-zinc-50/70 transition-colors">
+                                    <td class="px-5 py-3.5 whitespace-nowrap font-medium text-zinc-900">
+                                        {{ \Carbon\Carbon::create()->month((int) $item->bulan)->translatedFormat('F') }}
+                                        {{ $item->tahun }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ number_format($item->jumlah_meter) }}
+                                    <td class="px-5 py-3.5 whitespace-nowrap text-right text-zinc-600 tabular-nums">
+                                        {{ number_format($item->jumlah_meter) }} kWh
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        Rp {{ number_format($item->total_tagihan, 2) }}
+                                    <td
+                                        class="px-5 py-3.5 whitespace-nowrap text-right font-semibold text-zinc-950 tabular-nums">
+                                        Rp {{ number_format($item->total_tagihan, 0, ',', '.') }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @if ($item->status == 'lunas')
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                Lunas
-                                            </span>
-                                        @else
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                Belum Lunas
-                                            </span>
-                                        @endif
+                                    <td class="px-5 py-3.5 whitespace-nowrap">
+                                        <x-status-badge :status="$item->status" />
                                     </td>
                                 </tr>
                             @endforeach
@@ -154,8 +151,68 @@
                     </table>
                 </div>
             @else
-                <p class="text-gray-500 text-center py-8">Belum ada tagihan</p>
+                <p class="text-xs text-zinc-400 text-center py-8">Belum ada riwayat tagihan tercatat.</p>
             @endif
         </div>
+
+        <!-- Tabel Penggunaan Terbaru -->
+        <div class="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-zinc-200 flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm font-semibold text-zinc-950">Catatan Stand Meter Terbaru</h2>
+                    <p class="text-xs text-zinc-500 mt-0.5">Riwayat pencatatan angka meteran kWh Anda</p>
+                </div>
+                <a href="{{ route('pelanggan.penggunaan') }}"
+                    class="text-xs font-medium text-zinc-600 hover:text-zinc-950 transition-colors">
+                    Lihat Semua
+                </a>
+            </div>
+
+            @if ($penggunaan->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-zinc-200 text-sm">
+                        <thead class="bg-zinc-50/70">
+                            <tr>
+                                <th
+                                    class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                    Periode</th>
+                                <th
+                                    class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                    Meter Awal</th>
+                                <th
+                                    class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                    Meter Akhir</th>
+                                <th
+                                    class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                    Pemakaian</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-100 bg-white">
+                            @foreach ($penggunaan as $item)
+                                <tr class="hover:bg-zinc-50/70 transition-colors">
+                                    <td class="px-5 py-3.5 whitespace-nowrap font-medium text-zinc-900">
+                                        {{ \Carbon\Carbon::create()->month((int) $item->bulan)->translatedFormat('F') }}
+                                        {{ $item->tahun }}
+                                    </td>
+                                    <td class="px-5 py-3.5 whitespace-nowrap text-right text-zinc-600 tabular-nums">
+                                        {{ number_format($item->meter_awal) }}
+                                    </td>
+                                    <td class="px-5 py-3.5 whitespace-nowrap text-right text-zinc-600 tabular-nums">
+                                        {{ number_format($item->meter_akhir) }}
+                                    </td>
+                                    <td
+                                        class="px-5 py-3.5 whitespace-nowrap text-right font-semibold text-zinc-950 tabular-nums">
+                                        {{ number_format($item->jumlah_meter) }} kWh
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <p class="text-xs text-zinc-400 text-center py-8">Belum ada data penggunaan tercatat.</p>
+            @endif
+        </div>
+
     </div>
 @endsection

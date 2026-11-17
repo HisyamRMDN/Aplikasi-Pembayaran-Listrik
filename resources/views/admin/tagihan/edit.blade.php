@@ -3,162 +3,94 @@
 @section('title', 'Edit Tagihan')
 
 @section('content')
-<div class="p-6">
-    <!-- Header -->
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Edit Tagihan</h1>
-        <p class="text-gray-600">Perbarui data tagihan listrik</p>
-    </div>
+    @php
+        $namaBulan = fn($i) => \Carbon\Carbon::create(2000, $i, 1)->locale('id')->translatedFormat('F');
+        $label = 'text-xs font-semibold uppercase tracking-wider text-zinc-500';
+        $tarif = $tagihan->pelanggan->tarif;
+    @endphp
 
-    <div class="bg-white rounded-lg shadow-sm p-6">
-        <form method="POST" action="{{ route('tagihan.update', $tagihan->id_tagihan) }}">
-            @csrf
-            @method('PUT')
+    <div class="p-6 max-w-3xl">
+        <x-page-header title="Edit Tagihan Manual"
+            subtitle="{{ $namaBulan($tagihan->bulan) }} {{ $tagihan->tahun }} · {{ $tagihan->pelanggan->nama_pelanggan }}" />
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Customer Info (Read Only) -->
-                <div class="md:col-span-2 p-4 bg-gray-50 rounded-lg">
-                    <h3 class="text-lg font-medium text-gray-900 mb-3">Informasi Pelanggan</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                            <label class="font-medium text-gray-600">Nama:</label>
-                            <p class="text-gray-900">{{ $tagihan->pelanggan->nama_pelanggan }}</p>
-                        </div>
-                        <div>
-                            <label class="font-medium text-gray-600">Nomor KWH:</label>
-                            <p class="text-gray-900">{{ $tagihan->pelanggan->nomor_kwh }}</p>
-                        </div>
-                        <div>
-                            <label class="font-medium text-gray-600">Tarif:</label>
-                            <p class="text-gray-900">{{ $tagihan->pelanggan->tarif->daya }} VA - Rp {{ number_format($tagihan->pelanggan->tarif->tarif_per_kwh, 2) }}/kWh</p>
-                        </div>
+        <x-flash-message />
+
+        <div class="rounded-xl border border-zinc-200 bg-white p-6">
+            <!-- Info read-only -->
+            <dl class="mb-6 grid grid-cols-1 gap-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm md:grid-cols-3">
+                <div>
+                    <dt class="{{ $label }}">Pelanggan</dt>
+                    <dd class="mt-1 text-zinc-900">{{ $tagihan->pelanggan->nama_pelanggan }}</dd>
+                </div>
+                <div>
+                    <dt class="{{ $label }}">Nomor KWH</dt>
+                    <dd class="mt-1 font-mono text-zinc-900">{{ $tagihan->pelanggan->nomor_kwh }}</dd>
+                </div>
+                <div>
+                    <dt class="{{ $label }}">Tarif Pada Tagihan</dt>
+                    <dd class="mt-1 text-zinc-900">
+                        <span class="tabular-nums">{{ number_format($tarif->daya) }}</span> VA
+                        <span class="text-zinc-500">· Rp <span
+                                class="tabular-nums">{{ number_format($tagihan->tarif_per_kwh, 2) }}</span>/kWh</span>
+                    </dd>
+                </div>
+            </dl>
+
+            <form method="POST" action="{{ route('tagihan.update', $tagihan->id_tagihan) }}">
+                @csrf
+                @method('PUT')
+
+                @include('admin.tagihan._form')
+
+                <!-- Pratinjau total -->
+                <div class="mt-5 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="{{ $label }}">Pemakaian</span>
+                        <span id="preview-usage"
+                            class="font-mono tabular-nums text-zinc-900">{{ number_format($tagihan->jumlah_meter) }}
+                            kWh</span>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between text-sm">
+                        <span class="{{ $label }}">Total Tagihan</span>
+                        <span id="preview-total" class="font-mono text-lg font-semibold tabular-nums text-zinc-950">Rp
+                            {{ number_format($tagihan->total_tagihan, 2) }}</span>
                     </div>
                 </div>
 
-                <!-- Period Info (Read Only) -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Periode Tagihan</label>
-                    <input type="text" value="{{ DateTime::createFromFormat('!m', $tagihan->bulan)->format('F') }} {{ $tagihan->tahun }}" readonly
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
-                </div>
-
-                <!-- Current Usage -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Penggunaan Saat Ini</label>
-                    <input type="text" value="{{ number_format($tagihan->jumlah_meter) }} kWh" readonly
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
-                </div>
-
-                <!-- Editable Usage -->
-                <div>
-                    <label for="jumlah_meter" class="block text-sm font-medium text-gray-700 mb-2">Jumlah Penggunaan (kWh)</label>
-                    <input type="number" id="jumlah_meter" name="jumlah_meter" value="{{ old('jumlah_meter', $tagihan->jumlah_meter) }}" required min="0"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('jumlah_meter') border-red-500 @enderror">
-                    @error('jumlah_meter')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Status -->
-                <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status Pembayaran</label>
-                    <select id="status" name="status" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('status') border-red-500 @enderror">
-                        <option value="belum_lunas" {{ old('status', $tagihan->status) == 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
-                        <option value="lunas" {{ old('status', $tagihan->status) == 'lunas' ? 'selected' : '' }}>Lunas</option>
-                    </select>
-                    @error('status')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-
-            <!-- Calculation Preview -->
-            <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h3 class="text-sm font-medium text-blue-800 mb-2">Preview Perhitungan</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                        <p class="text-blue-700">Penggunaan:</p>
-                        <p class="font-semibold text-blue-900" id="preview-usage">{{ number_format($tagihan->jumlah_meter) }} kWh</p>
-                    </div>
-                    <div>
-                        <p class="text-blue-700">Tarif per kWh:</p>
-                        <p class="font-semibold text-blue-900">Rp {{ number_format($tagihan->pelanggan->tarif->tarif_per_kwh, 2) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-blue-700">Total Tagihan:</p>
-                        <p class="font-semibold text-blue-900 text-lg" id="preview-total">Rp {{ number_format($tagihan->total_tagihan, 2) }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Current Bill Details -->
-            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-                <h3 class="text-sm font-medium text-gray-800 mb-2">Tagihan Saat Ini:</h3>
-                <div class="text-sm text-gray-600">
-                    <p>Total Tagihan: <span class="font-semibold">Rp {{ number_format($tagihan->total_tagihan, 2) }}</span></p>
-                    <p>Status:
-                        @if($tagihan->status === 'lunas')
-                            <span class="text-green-600 font-semibold">Lunas</span>
-                        @else
-                            <span class="text-red-600 font-semibold">Belum Lunas</span>
-                        @endif
-                    </p>
-                </div>
-            </div>
-
-            <!-- Information -->
-            <div class="mt-6 p-4 bg-yellow-50 rounded-lg">
-                <h3 class="text-sm font-medium text-yellow-800">Perhatian:</h3>
-                <ul class="text-sm text-yellow-700 mt-2 space-y-1">
-                    <li>• Perubahan jumlah penggunaan akan mengubah total tagihan secara otomatis</li>
-                    <li>• Jika status diubah menjadi "Lunas", pastikan pembayaran sudah benar-benar diterima</li>
-                    <li>• Perubahan data akan mempengaruhi laporan dan perhitungan</li>
+                <ul class="mt-5 space-y-1 text-xs text-zinc-500">
+                    <li>— Mengubah kWh akan mengubah total tagihan secara otomatis.</li>
+                    <li>— Status pembayaran tidak bisa diubah di sini. Gunakan menu Pembayaran.</li>
                 </ul>
-            </div>
 
-            @if ($errors->any())
-                <div class="mt-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    <ul class="list-disc list-inside">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                <div class="mt-6 flex justify-end gap-2 border-t border-zinc-200 pt-5">
+                    <a href="{{ route('tagihan.show', $tagihan->id_tagihan) }}"
+                        class="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+                        Batal
+                    </a>
+                    <button type="submit"
+                        class="rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800">
+                        Perbarui
+                    </button>
                 </div>
-            @endif
-
-            <!-- Buttons -->
-            <div class="flex justify-end space-x-3 mt-6">
-                <a href="{{ route('tagihan.show', $tagihan->id_tagihan) }}"
-                   class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-                    Batal
-                </a>
-                <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                    Perbarui
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const jumlahMeterInput = document.getElementById('jumlah_meter');
-    const previewUsage = document.getElementById('preview-usage');
-    const previewTotal = document.getElementById('preview-total');
-    const tarifPerKwh = {{ $tagihan->pelanggan->tarif->tarif_per_kwh }};
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('jumlah_meter');
+            const usage = document.getElementById('preview-usage');
+            const total = document.getElementById('preview-total');
+            const tarif = {{ (float) $tagihan->tarif_per_kwh }};
 
-    jumlahMeterInput.addEventListener('input', function() {
-        const usage = parseInt(this.value) || 0;
-        const total = usage * tarifPerKwh;
-
-        previewUsage.textContent = usage.toLocaleString('id-ID') + ' kWh';
-        previewTotal.textContent = 'Rp ' + total.toLocaleString('id-ID', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+            input.addEventListener('input', function() {
+                const kwh = parseInt(this.value, 10) || 0;
+                usage.textContent = kwh.toLocaleString('id-ID') + ' kWh';
+                total.textContent = 'Rp ' + (kwh * tarif).toLocaleString('id-ID', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            });
         });
-    });
-});
-</script>
+    </script>
 @endsection

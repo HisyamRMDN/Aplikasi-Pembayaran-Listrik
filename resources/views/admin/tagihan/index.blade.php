@@ -3,168 +3,130 @@
 @section('title', 'Kelola Tagihan')
 
 @section('content')
+    @php
+        $field =
+            'rounded-lg border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 focus:border-zinc-950 focus:outline-none';
+        $namaBulan = fn($i) => \Carbon\Carbon::create(2000, $i, 1)->locale('id')->translatedFormat('F');
+    @endphp
+
     <div class="p-6">
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Kelola Tagihan</h1>
-                <p class="text-gray-600">Daftar tagihan listrik pelanggan</p>
-            </div>
-            <a href="{{ route('tagihan.create') }}"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
-                + Tambah Tagihan
-            </a>
-        </div>
+        <x-page-header title="Kelola Tagihan" subtitle="Daftar tagihan listrik pelanggan.">
+            <x-slot:actions>
+                <a href="{{ route('tagihan.create') }}"
+                    class="rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800">
+                    Tambah Tagihan
+                </a>
+            </x-slot:actions>
+        </x-page-header>
 
-        <!-- Flash Messages -->
-        @if (session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                {{ session('success') }}
-            </div>
-        @endif
+        <x-flash-message />
 
-        <!-- Search and Filter -->
-        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <form method="GET" action="{{ route('tagihan.index') }}" class="flex flex-col sm:flex-row gap-4">
-                <div class="flex-1">
-                    <input type="text" name="search" value="{{ request('search') }}"
-                        placeholder="Cari nama pelanggan atau nomor KWH..."
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <select name="status"
-                        class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Semua Status</option>
-                        <option value="belum_lunas" {{ request('status') == 'belum_lunas' ? 'selected' : '' }}>Belum Lunas
-                        </option>
-                        <option value="lunas" {{ request('status') == 'lunas' ? 'selected' : '' }}>Lunas</option>
-                    </select>
-                </div>
-                <div>
-                    <select name="bulan"
-                        class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Semua Bulan</option>
-                        @for ($i = 1; $i <= 12; $i++)
-                            <option value="{{ $i }}" {{ request('bulan') == $i ? 'selected' : '' }}>
-                                {{ DateTime::createFromFormat('!m', $i)->format('F') }}
-                            </option>
-                        @endfor
-                    </select>
-                </div>
-                <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+        <!-- Filter -->
+        <form method="GET" action="{{ route('tagihan.index') }}"
+            class="mb-5 flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:flex-row">
+            <input type="text" name="search" value="{{ request('search') }}"
+                placeholder="Cari nama pelanggan atau nomor KWH"
+                class="{{ $field }} flex-1 placeholder:text-zinc-400">
+
+            <select name="status" class="{{ $field }}">
+                <option value="">Semua status</option>
+                <option value="belum_lunas" {{ request('status') == 'belum_lunas' ? 'selected' : '' }}>Belum lunas</option>
+                <option value="lunas" {{ request('status') == 'lunas' ? 'selected' : '' }}>Lunas</option>
+            </select>
+
+            <select name="bulan" class="{{ $field }}">
+                <option value="">Semua bulan</option>
+                @for ($i = 1; $i <= 12; $i++)
+                    <option value="{{ $i }}" {{ request('bulan') == $i ? 'selected' : '' }}>{{ $namaBulan($i) }}
+                    </option>
+                @endfor
+            </select>
+
+            <div class="flex gap-2">
+                <button type="submit"
+                    class="rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800">
                     Cari
                 </button>
-            </form>
-        </div>
-
-        <!-- Summary Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Total Tagihan Belum Lunas</p>
-                    <p class="text-2xl font-bold text-yellow-600">
-                        {{ $tagihans->where('status', 'belum_lunas')->count() }}</p>
-                </div>
+                @if (request()->hasAny(['search', 'status', 'bulan']))
+                    <a href="{{ route('tagihan.index') }}"
+                        class="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50">
+                        Reset
+                    </a>
+                @endif
             </div>
+        </form>
 
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Total Tagihan Lunas</p>
-                    <p class="text-2xl font-bold text-green-600">{{ $tagihans->where('status', 'lunas')->count() }}</p>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Total Semua Tagihan</p>
-                    <p class="text-2xl font-bold text-blue-600">{{ $tagihans->total() }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Table -->
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <!-- Tabel -->
+        <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pelanggan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nomor KWH</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bulan/Tahun</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Penggunaan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Tagihan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                <table class="min-w-full divide-y divide-zinc-200">
+                    <thead class="bg-zinc-50">
+                        <tr class="text-left text-xs font-semibold uppercase tracking-wider text-zinc-600">
+                            <th class="px-5 py-3">No</th>
+                            <th class="px-5 py-3">Pelanggan</th>
+                            <th class="px-5 py-3">Nomor KWH</th>
+                            <th class="px-5 py-3">Periode</th>
+                            <th class="px-5 py-3 text-right">Pemakaian</th>
+                            <th class="px-5 py-3 text-right">Total Tagihan</th>
+                            <th class="px-5 py-3">Status</th>
+                            <th class="px-5 py-3 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($tagihans as $index => $tagihan)
-                            <tr class="{{ $tagihan->status == 'belum_lunas' ? 'bg-red-50' : '' }}">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tbody class="divide-y divide-zinc-200 text-sm">
+                        @forelse ($tagihans as $index => $tagihan)
+                            <tr class="hover:bg-zinc-50">
+                                <td class="whitespace-nowrap px-5 py-3.5 tabular-nums text-zinc-500">
                                     {{ $tagihans->firstItem() + $index }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td class="whitespace-nowrap px-5 py-3.5 font-medium text-zinc-900">
                                     {{ $tagihan->pelanggan->nama_pelanggan }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td class="whitespace-nowrap px-5 py-3.5 font-mono text-zinc-600">
                                     {{ $tagihan->pelanggan->nomor_kwh }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ DateTime::createFromFormat('!m', $tagihan->bulan)->format('F') }}
-                                    {{ $tagihan->tahun }}
+                                <td class="whitespace-nowrap px-5 py-3.5 text-zinc-900">
+                                    {{ $namaBulan($tagihan->bulan) }} <span
+                                        class="tabular-nums">{{ $tagihan->tahun }}</span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <span class="font-semibold text-blue-600">
-                                        {{ number_format($tagihan->jumlah_meter) }} kWh
-                                    </span>
+                                <td class="whitespace-nowrap px-5 py-3.5 text-right font-mono tabular-nums text-zinc-600">
+                                    {{ number_format($tagihan->jumlah_meter) }} kWh
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <span class="font-semibold">
-                                        Rp {{ number_format($tagihan->total_tagihan, 2) }}
-                                    </span>
+                                <td
+                                    class="whitespace-nowrap px-5 py-3.5 text-right font-mono font-semibold tabular-nums text-zinc-950">
+                                    Rp {{ number_format($tagihan->total_tagihan, 2) }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if ($tagihan->status === 'lunas')
-                                        <span
-                                            class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Lunas</span>
-                                    @else
-                                        <span
-                                            class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Belum
-                                            Lunas</span>
-                                    @endif
+                                <td class="whitespace-nowrap px-5 py-3.5">
+                                    <x-status-badge :status="$tagihan->status" />
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex space-x-2">
+                                <td class="whitespace-nowrap px-5 py-3.5 text-right">
+                                    <div class="flex items-center justify-end gap-4 text-sm">
                                         <a href="{{ route('tagihan.show', $tagihan->id_tagihan) }}"
-                                            class="text-blue-600 hover:text-blue-900" title="Lihat Detail">
-                                            👁️
-                                        </a>
-                                        <a href="{{ route('tagihan.edit', $tagihan->id_tagihan) }}"
-                                            class="text-green-600 hover:text-green-900" title="Edit">
-                                            ✏️
-                                        </a>
+                                            class="font-medium text-zinc-900 hover:underline">Detail</a>
+                                        @if ($tagihan->bisaDiubah())
+                                            <a href="{{ route('tagihan.edit', $tagihan->id_tagihan) }}"
+                                                class="font-medium text-zinc-600 hover:text-zinc-950 hover:underline">Edit</a>
+                                        @endif
                                         @if ($tagihan->status === 'belum_lunas')
                                             <a href="{{ route('pembayaran.create', ['tagihan' => $tagihan->id_tagihan]) }}"
-                                                class="text-purple-600 hover:text-purple-900" title="Bayar">
-                                                💳
-                                            </a>
+                                                class="font-medium text-zinc-900 underline underline-offset-2">Bayar</a>
                                         @endif
-                                        <form method="POST" action="{{ route('tagihan.destroy', $tagihan->id_tagihan) }}"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus tagihan ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus">
-                                                🗑️
-                                            </button>
-                                        </form>
+                                        @if ($tagihan->bisaDiubah())
+                                            <form method="POST"
+                                                action="{{ route('tagihan.destroy', $tagihan->id_tagihan) }}"
+                                                onsubmit="return confirm('Hapus tagihan ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                    class="font-medium text-red-600 hover:underline">Hapus</button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-6 py-4 text-center text-gray-500">
-                                    Tidak ada data tagihan
+                                <td colspan="8" class="px-5 py-12 text-center text-sm text-zinc-500">
+                                    Tidak ada data tagihan.
                                 </td>
                             </tr>
                         @endforelse
@@ -172,10 +134,11 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
-            <div class="px-6 py-4 border-t border-gray-200">
-                {{ $tagihans->appends(request()->query())->links() }}
-            </div>
+            @if ($tagihans->hasPages())
+                <div class="border-t border-zinc-200 px-5 py-4">
+                    {{ $tagihans->appends(request()->query())->links() }}
+                </div>
+            @endif
         </div>
     </div>
 @endsection

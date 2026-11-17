@@ -2,10 +2,20 @@
 
 @php
     $styles = match ($status) {
-        'lunas' => [
+        'lunas', 'berhasil' => [
             'wrapper' => 'bg-emerald-50 border-emerald-200 text-emerald-700',
             'dot' => 'bg-emerald-500',
-            'label' => 'Lunas',
+            'label' => $status === 'berhasil' ? 'Berhasil' : 'Lunas',
+        ],
+        'terlambat' => [
+            'wrapper' => 'bg-red-50 border-red-200 text-red-700',
+            'dot' => 'bg-red-500',
+            'label' => 'Terlambat',
+        ],
+        'batal' => [
+            'wrapper' => 'bg-zinc-100 border-zinc-300 text-zinc-600',
+            'dot' => 'bg-zinc-400',
+            'label' => 'Dibatalkan',
         ],
         'belum_aktivasi' => [
             'wrapper' => 'bg-zinc-100 border-zinc-300 text-zinc-700',

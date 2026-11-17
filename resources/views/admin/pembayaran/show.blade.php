@@ -18,10 +18,12 @@
                     class="rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors">
                     ← Riwayat Pembayaran
                 </a>
-                <a href="{{ route('pembayaran.edit', $pembayaran->id_pembayaran) }}"
-                    class="rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 transition-colors">
-                    Edit
-                </a>
+                @unless ($pembayaran->isBatal())
+                    <a href="{{ route('pembayaran.edit', $pembayaran->id_pembayaran) }}"
+                        class="rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 transition-colors">
+                        Edit
+                    </a>
+                @endunless
                 <button type="button" onclick="window.print()"
                     class="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
@@ -33,6 +35,8 @@
             </div>
         </div>
 
+        <x-flash-message />
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Area Struk / Informasi Utama (Ikut Tercetak saat Print) -->
             <div class="lg:col-span-2 space-y-6 print-section">
@@ -40,11 +44,19 @@
                 <div class="bg-white border border-zinc-200 rounded-xl p-6 space-y-5">
                     <div class="flex items-center justify-between border-b border-zinc-100 pb-3">
                         <h2 class="text-sm font-semibold text-zinc-950">Informasi Transaksi</h2>
-                        <span
-                            class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            Lunas
-                        </span>
+                        @if ($pembayaran->isBatal())
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 border border-zinc-300 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                                <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+                                Dibatalkan
+                            </span>
+                        @else
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                Lunas
+                            </span>
+                        @endif
                     </div>
 
                     <div class="grid grid-cols-2 gap-5 text-sm">
@@ -96,7 +108,7 @@
                         <div>
                             <p class="text-xs text-zinc-400">Tarif per kWh</p>
                             <p class="font-medium text-zinc-900 tabular-nums mt-0.5">
-                                Rp {{ number_format($pembayaran->tagihan->pelanggan->tarif->tarif_per_kwh, 2) }}
+                                Rp {{ number_format($pembayaran->tagihan->tarif_per_kwh, 2) }}
                             </p>
                         </div>
 
@@ -186,18 +198,49 @@
                     </div>
                 </div>
 
-                <!-- Batalkan Pembayaran -->
-                <div class="bg-white border border-zinc-200 rounded-xl p-5">
-                    <form action="{{ route('pembayaran.destroy', $pembayaran->id_pembayaran) }}" method="POST"
-                        onsubmit="return confirm('Yakin ingin membatalkan pembayaran ini? Tagihan akan kembali menjadi belum lunas.')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                            class="w-full rounded-lg border border-red-200 bg-red-50/60 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors cursor-pointer">
-                            Batalkan Pembayaran
-                        </button>
-                    </form>
-                </div>
+                <!-- Pembatalan -->
+                @if ($pembayaran->isBatal())
+                    <div class="bg-white border border-zinc-200 rounded-xl p-6 space-y-3">
+                        <h2 class="text-sm font-semibold text-zinc-950 border-b border-zinc-100 pb-3">Pembayaran Dibatalkan
+                        </h2>
+                        <div class="space-y-3 text-sm">
+                            <div>
+                                <p class="text-xs text-zinc-400">Alasan</p>
+                                <p class="text-zinc-900 mt-0.5">{{ $pembayaran->alasan_batal ?: '—' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-zinc-400">Waktu</p>
+                                <p class="text-zinc-900 tabular-nums mt-0.5">
+                                    {{ $pembayaran->dibatalkan_pada?->format('d/m/Y H:i') ?? '—' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-zinc-400">Dibatalkan oleh</p>
+                                <p class="text-zinc-900 mt-0.5">{{ $pembayaran->userPembatal->nama_admin ?? '—' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="bg-white border border-zinc-200 rounded-xl p-5">
+                        <form action="{{ route('pembayaran.destroy', $pembayaran->id_pembayaran) }}" method="POST"
+                            class="space-y-3"
+                            onsubmit="return confirm('Yakin ingin membatalkan pembayaran ini? Tagihan akan kembali menjadi belum lunas.')">
+                            @csrf
+                            @method('DELETE')
+                            <div>
+                                <label for="alasan"
+                                    class="block text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Alasan
+                                    Pembatalan</label>
+                                <input type="text" id="alasan" name="alasan" maxlength="255" required
+                                    placeholder="Contoh: salah input tagihan"
+                                    class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-950 focus:outline-none">
+                            </div>
+                            <button type="submit"
+                                class="w-full rounded-lg border border-red-200 bg-red-50/60 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors cursor-pointer">
+                                Batalkan Pembayaran
+                            </button>
+                        </form>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

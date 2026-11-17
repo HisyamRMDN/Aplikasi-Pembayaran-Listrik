@@ -29,6 +29,10 @@ Route::middleware('ensure.auth:web')->group(function () {
     Route::resource('pelanggan', PelangganController::class);
 
     // Penggunaan management
+    // Penggunaan management (Rute khusus wajib di atas Route::resource)
+    Route::get('/penggunaan/massal', [PenggunaanController::class, 'massal'])->name('penggunaan.massal');
+    Route::post('/penggunaan/massal', [PenggunaanController::class, 'storeMassal'])->name('penggunaan.massal.store');
+    Route::get('/penggunaan/meter-terakhir', [PenggunaanController::class, 'getMeterTerakhir'])->name('penggunaan.meter-terakhir');
     Route::resource('penggunaan', PenggunaanController::class);
 
     // Tagihan management
@@ -36,10 +40,13 @@ Route::middleware('ensure.auth:web')->group(function () {
 
     // Pembayaran management
     Route::resource('pembayaran', PembayaranController::class);
+
+    Route::resource('tarif', TarifController::class);
 });
 
 Route::middleware('ensure.auth:pelanggan')->group(function () {
     Route::get('/customer/dashboard', [DashboardController::class, 'pelangganDashboard'])->name('pelanggan.dashboard');
     Route::get('/customer/tagihan', [PembayaranController::class, 'pelangganTagihan'])->name('pelanggan.tagihan');
     Route::get('/customer/penggunaan', [PelangganController::class, 'riwayatPenggunaan'])->name('pelanggan.penggunaan');
+
 });

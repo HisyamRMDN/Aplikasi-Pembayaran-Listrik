@@ -1,75 +1,114 @@
 @extends('layouts.app')
 
-@section('title', 'Tagihan Listrik')
+@section('title', 'Tagihan Listrik — VOLTPAY')
 
 @section('content')
-    <div class="p-6">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <!-- Header -->
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Tagihan Listrik</h1>
-            <p class="text-gray-600">Daftar tagihan listrik Anda</p>
-        </div>
+        <x-page-header title="Tagihan Listrik" subtitle="Daftar tagihan listrik pascabayar dan status pelunasan Anda">
+            <x-slot:actions>
+                <a href="{{ route('pelanggan.dashboard') }}"
+                    class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 hover:border-zinc-300 transition-colors">
+                    ← Ringkasan Akun
+                </a>
+                <a href="{{ route('pelanggan.penggunaan') }}"
+                    class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 hover:border-zinc-300 transition-colors">
+                    Riwayat Penggunaan
+                </a>
+            </x-slot:actions>
+        </x-page-header>
 
-        <!-- Tagihan List -->
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <!-- Metric Grid Ringkasan Tagihan -->
+        @if ($tagihans->count() > 0)
+            @php
+                $jumlahLunas = $tagihans->where('status', 'lunas')->count();
+                $tagihanTunggakan = $tagihans->where('status', 'belum_lunas');
+                $jumlahBelumLunas = $tagihanTunggakan->count();
+                $nominalBelumLunas = $tagihanTunggakan->sum('total_tagihan');
+            @endphp
+            <div
+                class="grid grid-cols-1 sm:grid-cols-3 gap-px bg-zinc-200 border border-zinc-200 rounded-xl overflow-hidden">
+                <div class="bg-white p-5">
+                    <span class="text-xs font-medium text-zinc-500">Total Tagihan Tercatat</span>
+                    <p class="mt-3 text-2xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                        {{ $tagihans->count() }} <span class="text-sm font-normal text-zinc-400">tagihan</span>
+                    </p>
+                    <p class="mt-1 text-xs text-zinc-400">Seluruh periode penagihan</p>
+                </div>
+
+                <div class="bg-white p-5">
+                    <span class="text-xs font-medium text-zinc-500">Sudah Lunas</span>
+                    <p class="mt-3 text-2xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                        {{ $jumlahLunas }} <span class="text-sm font-normal text-zinc-400">tagihan</span>
+                    </p>
+                    <p class="mt-1 text-xs text-zinc-400">Pembayaran terverifikasi</p>
+                </div>
+
+                <div class="bg-white p-5">
+                    <span class="text-xs font-medium text-zinc-500">Belum Lunas ({{ $jumlahBelumLunas }})</span>
+                    <p class="mt-3 text-2xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                        Rp {{ number_format($nominalBelumLunas, 0, ',', '.') }}
+                    </p>
+                    <p class="mt-1 text-xs text-zinc-400">
+                        {{ $jumlahBelumLunas > 0 ? 'Total pokok tagihan tertunggak' : 'Tidak ada tunggakan aktif' }}
+                    </p>
+                </div>
+            </div>
+        @endif
+
+        <!-- Tabel Daftar Tagihan -->
+        <div class="bg-white border border-zinc-200 rounded-xl overflow-hidden">
             @if ($tagihans->count() > 0)
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full divide-y divide-zinc-200 text-sm">
+                        <thead class="bg-zinc-50/70">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Bulan/Tahun</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Penggunaan (kWh)</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Tarif per kWh</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                    Periode</th>
+                                <th
+                                    class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                    Pemakaian</th>
+                                <th
+                                    class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                    Tarif / kWh</th>
+                                <th
+                                    class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                                     Total Tagihan</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                                     Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Tanggal Dibuat</th>
+                                <th
+                                    class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                                    Tanggal Terbit</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="divide-y divide-zinc-100 bg-white">
                             @foreach ($tagihans as $tagihan)
-                                <tr class="{{ $tagihan->status == 'belum_lunas' ? 'bg-red-50' : '' }}">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {{ str_pad($tagihan->bulan, 2, '0', STR_PAD_LEFT) }}/{{ $tagihan->tahun }}
+                                @php
+                                    $tarifBerlaku =
+                                        $tagihan->tarif_per_kwh ?? $tagihan->pelanggan->tarif->tarif_per_kwh;
+                                @endphp
+                                <tr
+                                    class="hover:bg-zinc-50/70 transition-colors {{ $tagihan->status === 'belum_lunas' ? 'bg-amber-50/30' : '' }}">
+                                    <td class="px-5 py-3.5 whitespace-nowrap font-medium text-zinc-900">
+                                        {{ \Carbon\Carbon::create()->month((int) $tagihan->bulan)->translatedFormat('F') }}
+                                        {{ $tagihan->tahun }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-5 py-3.5 whitespace-nowrap text-right text-zinc-600 tabular-nums">
                                         {{ number_format($tagihan->jumlah_meter) }} kWh
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        Rp {{ number_format($tagihan->pelanggan->tarif->tarif_per_kwh, 2) }}
+                                    <td class="px-5 py-3.5 whitespace-nowrap text-right text-zinc-500 tabular-nums">
+                                        Rp {{ number_format($tarifBerlaku, 2) }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                        Rp {{ number_format($tagihan->total_tagihan, 2) }}
+                                    <td
+                                        class="px-5 py-3.5 whitespace-nowrap text-right font-semibold text-zinc-950 tabular-nums">
+                                        Rp {{ number_format($tagihan->total_tagihan, 0, ',', '.') }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @if ($tagihan->status == 'lunas')
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                        clip-rule="evenodd"></path>
-                                                </svg>
-                                                Lunas
-                                            </span>
-                                        @else
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                                        clip-rule="evenodd"></path>
-                                                </svg>
-                                                Belum Lunas
-                                            </span>
-                                        @endif
+                                    <td class="px-5 py-3.5 whitespace-nowrap">
+                                        <x-status-badge :status="$tagihan->status" />
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-5 py-3.5 whitespace-nowrap text-xs text-zinc-500 tabular-nums">
                                         {{ $tagihan->created_at->format('d/m/Y') }}
                                     </td>
                                 </tr>
@@ -78,81 +117,11 @@
                     </table>
                 </div>
             @else
-                <div class="p-12 text-center">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                        </path>
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">Belum Ada Tagihan</h3>
-                    <p class="mt-1 text-sm text-gray-500">Anda belum memiliki tagihan listrik.</p>
+                <div class="px-5 py-12 text-center">
+                    <p class="text-sm font-medium text-zinc-900">Belum Ada Tagihan</p>
+                    <p class="text-xs text-zinc-400 mt-1">Anda belum memiliki riwayat tagihan listrik.</p>
                 </div>
             @endif
-        </div>
-
-        <!-- Summary Card -->
-        @if ($tagihans->count() > 0)
-            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-blue-900">Total Tagihan</p>
-                            <p class="text-lg font-semibold text-blue-600">{{ $tagihans->count() }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-green-900">Lunas</p>
-                            <p class="text-lg font-semibold text-green-600">
-                                {{ $tagihans->where('status', 'lunas')->count() }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-red-900">Belum Lunas</p>
-                            <p class="text-lg font-semibold text-red-600">
-                                {{ $tagihans->where('status', 'belum_lunas')->count() }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        <!-- Back Button -->
-        <div class="mt-6">
-            <a href="{{ route('pelanggan.dashboard') }}"
-                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg inline-flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
-                    </path>
-                </svg>
-                Kembali ke Dashboard
-            </a>
         </div>
     </div>
 @endsection

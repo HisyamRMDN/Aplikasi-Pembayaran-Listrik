@@ -19,14 +19,7 @@
             </a>
         </div>
 
-        <!-- Flash Messages -->
-        @if (session('success'))
-            <div
-                class="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-xs sm:text-sm text-emerald-900">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
+        <x-flash-message />
 
         <!-- Metric Grid Ringkas -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-px bg-zinc-200 border border-zinc-200 rounded-xl overflow-hidden">
@@ -170,9 +163,10 @@
                                         </a>
                                         <form action="{{ route('pembayaran.destroy', $pembayaran->id_pembayaran) }}"
                                             method="POST" class="inline"
-                                            onsubmit="return confirm('Yakin ingin membatalkan pembayaran ini? Status tagihan akan kembali menjadi belum lunas.')">
+                                            onsubmit="const a = prompt('Alasan pembatalan pembayaran (wajib diisi):'); if (!a || !a.trim()) { return false; } this.alasan.value = a.trim(); return true;">
                                             @csrf
                                             @method('DELETE')
+                                            <input type="hidden" name="alasan" value="">
                                             <button type="submit" title="Batalkan pembayaran"
                                                 class="p-1.5 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"

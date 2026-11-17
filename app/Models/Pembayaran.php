@@ -18,11 +18,16 @@ class Pembayaran extends Model
         'bulan_bayar',
         'biaya_admin',
         'total_bayar',
+        'status',
+        'dibatalkan_pada',
+        'alasan_batal',
+        'id_user_batal',
         'id_user'
     ];
 
     protected $casts = [
         'tanggal_pembayaran' => 'date',
+        'dibatalkan_pada' => 'datetime',
         'biaya_admin' => 'decimal:2',
         'total_bayar' => 'decimal:2'
     ];
@@ -40,5 +45,21 @@ class Pembayaran extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user', 'id_user');
+    }
+
+    public function userPembatal()
+    {
+        return $this->belongsTo(User::class, 'id_user_batal', 'id_user');
+    }
+
+    /** Pembayaran yang masih berlaku (belum dibatalkan). */
+    public function scopeAktif($query)
+    {
+        return $query->where('status', 'berhasil');
+    }
+
+    public function isBatal(): bool
+    {
+        return $this->status === 'batal';
     }
 }

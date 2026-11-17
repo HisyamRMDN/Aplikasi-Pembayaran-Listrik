@@ -39,4 +39,13 @@ class Penggunaan extends Model
     {
         return $this->meter_akhir - $this->meter_awal;
     }
+
+    /**
+     * Terkunci bila ada tagihan yang sudah lunas.
+     * Eager load 'tagihans' di controller agar tidak N+1.
+     */
+    public function terkunci(): bool
+    {
+        return $this->tagihans->contains(fn ($tagihan) => $tagihan->status === 'lunas');
+    }
 }
