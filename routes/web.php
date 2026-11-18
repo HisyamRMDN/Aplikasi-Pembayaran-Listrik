@@ -13,14 +13,20 @@ use App\Http\Controllers\LaporanController;
 
 // Public routes
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('user.login');
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:auth-attempt')
+    ->name('user.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Pelanggan authentication routes
 Route::get('/pelanggan/login', [AuthController::class, 'showPelangganLoginForm'])->name('pelanggan.login');
 Route::get('/aktivasi', [AuthController::class, 'showActivateForm'])->name('pelanggan.activate');
-Route::post('/aktivasi', [AuthController::class, 'activateAccount'])->name('pelanggan.activate.submit');
-Route::post('/pelanggan/login', [AuthController::class, 'pelangganLogin'])->name('pelanggan.login.submit');
+Route::post('/aktivasi', [AuthController::class, 'activateAccount'])
+    ->middleware('throttle:5,1')
+    ->name('pelanggan.activate.submit');
+Route::post('/pelanggan/login', [AuthController::class, 'pelangganLogin'])
+    ->middleware('throttle:5,1')
+    ->name('pelanggan.login.submit');
 Route::post('/pelanggan/logout', [AuthController::class, 'pelangganLogout'])->name('pelanggan.logout');
 
 // Admin routes (requires authentication)

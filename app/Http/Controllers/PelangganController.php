@@ -16,14 +16,16 @@ class PelangganController extends Controller
      */
     public function index(Request $request)
     {
-
         $query = Pelanggan::with('tarif')->withCount(['penggunaans', 'tagihans']);
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('nama_pelanggan', 'like', '%' . $search . '%')
-                    ->orWhere('nomor_kwh', 'like', '%' . $search . '%');
+                $q->where('nama_pelanggan', 'like', '%' . $search . '%')->orWhere(
+                    'nomor_kwh',
+                    'like',
+                    '%' . $search . '%',
+                );
             });
         }
 
@@ -32,13 +34,11 @@ class PelangganController extends Controller
         return view('admin.pelanggan.index', compact('pelanggans'));
     }
 
-
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-
         $tarifs = Tarif::all();
         return view('admin.pelanggan.create', compact('tarifs'));
     }
@@ -52,18 +52,17 @@ class PelangganController extends Controller
             'nomor_kwh' => 'required|numeric|digits_between:11,12|unique:pelanggans,nomor_kwh',
             'nama_pelanggan' => 'required|string|max:100',
             'alamat' => 'required|string',
-            'id_tarif' => 'required|exists:tarifs,id_tarif'
+            'id_tarif' => 'required|exists:tarifs,id_tarif',
         ]);
 
         Pelanggan::create([
             'nomor_kwh' => $request->nomor_kwh,
             'nama_pelanggan' => $request->nama_pelanggan,
             'alamat' => $request->alamat,
-            'id_tarif' => $request->id_tarif
+            'id_tarif' => $request->id_tarif,
         ]);
 
-        return redirect()->route('pelanggan.index')
-            ->with('success', 'Data meteran pelanggan berhasil ditambahkan');
+        return redirect()->route('pelanggan.index')->with('success', 'Data meteran pelanggan berhasil ditambahkan');
     }
 
     /**
@@ -96,18 +95,17 @@ class PelangganController extends Controller
             'nomor_kwh' => 'required|numeric|digits_between:11,12|unique:pelanggans,nomor_kwh,' . $id . ',id_pelanggan',
             'nama_pelanggan' => 'required|string|max:100',
             'alamat' => 'required|string',
-            'id_tarif' => 'required|exists:tarifs,id_tarif'
+            'id_tarif' => 'required|exists:tarifs,id_tarif',
         ]);
 
         $pelanggan->update([
             'nomor_kwh' => $request->nomor_kwh,
             'nama_pelanggan' => $request->nama_pelanggan,
             'alamat' => $request->alamat,
-            'id_tarif' => $request->id_tarif
+            'id_tarif' => $request->id_tarif,
         ]);
 
-        return redirect()->route('pelanggan.index')
-            ->with('success', 'Data pelanggan berhasil diperbarui');
+        return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil diperbarui');
     }
 
     /**
@@ -115,17 +113,20 @@ class PelangganController extends Controller
      */
     public function destroy(string $id)
     {
-        $pelanggan = Pelanggan::findOrFail($id);
+        $pelanggan = Pelanggan::withCount(['penggunaans', 'tagihans'])->findOrFail($id);
 
-        if ($pelanggan->penggunaans()->exists() || $pelanggan->tagihans()->exists()) {
-            return redirect()->route('pelanggan.index')
-                ->with('error', 'Pelanggan tidak dapat dihapus karena masih memiliki riwayat penggunaan atau tagihan.');
+        if ($pelanggan->penggunaans_count > 0 || $pelanggan->tagihans_count > 0) {
+            return redirect()
+                ->route('pelanggan.index')
+                ->with(
+                    'error',
+                    "Pelanggan {$pelanggan->nama_pelanggan} ({$pelanggan->nomor_kwh}) tidak dapat dihapus karena masih memiliki riwayat penggunaan atau tagihan.",
+                );
         }
 
         $pelanggan->delete();
 
-        return redirect()->route('pelanggan.index')
-            ->with('success', 'Pelanggan berhasil dihapus');
+        return redirect()->route('pelanggan.index')->with('success', 'Data pelanggan berhasil dihapus.');
     }
 
     public function riwayatPenggunaan()
@@ -144,15 +145,16 @@ class PelangganController extends Controller
         $tagihan = Tagihan::with([
             'pelanggan.tarif',
             'penggunaan',
-            'pembayarans' => fn ($q) => $q->where('status', 'berhasil')->with('user'),
+            'pembayarans' => fn($q) => $q->where('status', 'berhasil')->with('user'),
         ])
             ->where('id_pelanggan', $pelanggan->id_pelanggan)
             ->findOrFail($id);
 
         $pembayaran = $tagihan->pembayarans->first();
 
-        if (! $tagihan->isLunas() || ! $pembayaran) {
-            return redirect()->route('pelanggan.tagihan')
+        if (!$tagihan->isLunas() || !$pembayaran) {
+            return redirect()
+                ->route('pelanggan.tagihan')
                 ->with('error', 'Struk pembayaran hanya tersedia untuk tagihan yang sudah lunas.');
         }
 
@@ -180,8 +182,7 @@ class PelangganController extends Controller
 
         $pelanggan->update($validated);
 
-        return redirect()->route('pelanggan.profil.edit')
-            ->with('success', 'Data profil berhasil diperbarui.');
+        return redirect()->route('pelanggan.profil.edit')->with('success', 'Data profil berhasil diperbarui.');
     }
 
     public function updatePassword(Request $request)
@@ -194,7 +195,7 @@ class PelangganController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        if (! Hash::check($request->current_password, $pelanggan->password)) {
+        if (!Hash::check($request->current_password, $pelanggan->password)) {
             return back()->withErrors([
                 'current_password' => 'Kata sandi saat ini tidak sesuai.',
             ]);
@@ -204,7 +205,6 @@ class PelangganController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('pelanggan.profil.edit')
-            ->with('success', 'Kata sandi berhasil diperbarui.');
+        return redirect()->route('pelanggan.profil.edit')->with('success', 'Kata sandi berhasil diperbarui.');
     }
 }

@@ -22,8 +22,7 @@ class PenggunaanController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('pelanggan', function ($q) use ($search) {
-                $q->where('nama_pelanggan', 'like', "%{$search}%")
-                    ->orWhere('nomor_kwh', 'like', "%{$search}%");
+                $q->where('nama_pelanggan', 'like', "%{$search}%")->orWhere('nomor_kwh', 'like', "%{$search}%");
             });
         }
 
@@ -35,7 +34,8 @@ class PenggunaanController extends Controller
             $query->where('tahun', $request->tahun);
         }
 
-        $penggunaans = $query->orderBy('tahun', 'desc')
+        $penggunaans = $query
+            ->orderBy('tahun', 'desc')
             ->orderBy('bulan', 'desc')
             ->orderBy('id_penggunaan', 'desc')
             ->paginate(10)
@@ -58,7 +58,7 @@ class PenggunaanController extends Controller
         $terakhir = $this->cariPenggunaanSebelumnya(
             (int) $request->id_pelanggan,
             $request->bulan ? (int) $request->bulan : null,
-            $request->tahun ? (int) $request->tahun : null
+            $request->tahun ? (int) $request->tahun : null,
         );
 
         return response()->json([
@@ -95,22 +95,26 @@ class PenggunaanController extends Controller
                     ->exists();
 
                 if ($sudahAda) {
-                    return back()->withInput()->withErrors(['error' => self::PESAN_DUPLIKAT]);
+                    return back()
+                        ->withInput()
+                        ->withErrors(['error' => self::PESAN_DUPLIKAT]);
                 }
 
                 // Validasi ulang meter_awal dari catatan terakhir (mencegah bypass readonly)
                 $sebelumnya = $this->cariPenggunaanSebelumnya(
                     (int) $request->id_pelanggan,
                     (int) $request->bulan,
-                    (int) $request->tahun
+                    (int) $request->tahun,
                 );
 
                 $meterAwal = $sebelumnya ? (int) $sebelumnya->meter_akhir : (int) $request->meter_awal;
 
                 if ((int) $request->meter_akhir <= $meterAwal) {
-                    return back()->withInput()->withErrors([
-                        'meter_akhir' => "Meter akhir harus lebih besar dari meter awal ({$meterAwal}).",
-                    ]);
+                    return back()
+                        ->withInput()
+                        ->withErrors([
+                            'meter_akhir' => "Meter akhir harus lebih besar dari meter awal ({$meterAwal}).",
+                        ]);
                 }
 
                 $penggunaan = Penggunaan::create([
@@ -123,11 +127,14 @@ class PenggunaanController extends Controller
 
                 $this->buatTagihan($penggunaan);
 
-                return redirect()->route('penggunaan.index')
+                return redirect()
+                    ->route('penggunaan.index')
                     ->with('success', 'Data penggunaan berhasil ditambahkan dan tagihan otomatis dibuat');
             });
         } catch (UniqueConstraintViolationException $e) {
-            return back()->withInput()->withErrors(['error' => self::PESAN_DUPLIKAT]);
+            return back()
+                ->withInput()
+                ->withErrors(['error' => self::PESAN_DUPLIKAT]);
         }
     }
 
@@ -140,9 +147,7 @@ class PenggunaanController extends Controller
         $tahun = (int) $request->input('tahun', now()->year);
 
         // Pelanggan yang sudah dicatat pada bulan/tahun ini
-        $sudahDicatatIds = Penggunaan::where('bulan', $bulan)
-            ->where('tahun', $tahun)
-            ->pluck('id_pelanggan');
+        $sudahDicatatIds = Penggunaan::where('bulan', $bulan)->where('tahun', $tahun)->pluck('id_pelanggan');
 
         // Pelanggan yang belum dicatat beserta riwayat penggunaan sebelumnya
         $daftarPelanggan = Pelanggan::with('tarif')
@@ -162,12 +167,7 @@ class PenggunaanController extends Controller
 
         $jumlahSudahDicatat = $sudahDicatatIds->count();
 
-        return view('admin.penggunaan.massal', compact(
-            'daftarPelanggan',
-            'bulan',
-            'tahun',
-            'jumlahSudahDicatat'
-        ));
+        return view('admin.penggunaan.massal', compact('daftarPelanggan', 'bulan', 'tahun', 'jumlahSudahDicatat'));
     }
 
     /**
@@ -187,8 +187,9 @@ class PenggunaanController extends Controller
         $tahun = (int) $request->tahun;
 
         // Filter hanya baris yang meter_akhir-nya diisi petugas
-        $barisDiisi = collect($request->rows)
-            ->filter(fn ($row) => isset($row['meter_akhir']) && $row['meter_akhir'] !== '' && $row['meter_akhir'] !== null);
+        $barisDiisi = collect($request->rows)->filter(
+            fn($row) => isset($row['meter_akhir']) && $row['meter_akhir'] !== '' && $row['meter_akhir'] !== null,
+        );
 
         if ($barisDiisi->isEmpty()) {
             return back()->withInput()->with('error', 'Tidak ada angka meter akhir yang diisi.');
@@ -208,7 +209,7 @@ class PenggunaanController extends Controller
             }
         }
 
-        if (! empty($errors)) {
+        if (!empty($errors)) {
             return back()->withInput()->withErrors($errors);
         }
 
@@ -247,10 +248,16 @@ class PenggunaanController extends Controller
                 return $count;
             });
 
-            return redirect()->route('penggunaan.index', ['bulan' => $bulan, 'tahun' => $tahun])
-                ->with('success', "{$jumlahTersimpan} catatan penggunaan berhasil disimpan dan tagihannya otomatis diterbitkan.");
+            return redirect()
+                ->route('penggunaan.index', ['bulan' => $bulan, 'tahun' => $tahun])
+                ->with(
+                    'success',
+                    "{$jumlahTersimpan} catatan penggunaan berhasil disimpan dan tagihannya otomatis diterbitkan.",
+                );
         } catch (UniqueConstraintViolationException $e) {
-            return back()->withInput()->with('error', 'Terjadi bentrok data ganda saat menyimpan massal. Silakan muat ulang halaman.');
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi bentrok data ganda saat menyimpan massal. Silakan muat ulang halaman.');
         }
     }
 
@@ -265,7 +272,8 @@ class PenggunaanController extends Controller
         $penggunaan = Penggunaan::with('tagihans')->findOrFail($id);
 
         if ($penggunaan->terkunci()) {
-            return redirect()->route('penggunaan.show', $penggunaan->id_penggunaan)
+            return redirect()
+                ->route('penggunaan.show', $penggunaan->id_penggunaan)
                 ->with('error', self::PESAN_TERKUNCI);
         }
 
@@ -275,55 +283,56 @@ class PenggunaanController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'id_pelanggan' => 'required|exists:pelanggans,id_pelanggan',
-            'bulan' => 'required|integer|min:1|max:12',
-            'tahun' => 'required|integer|min:2020',
-            'meter_awal' => 'required|integer|min:0',
-            'meter_akhir' => 'required|integer|min:0|gt:meter_awal',
-        ]);
+        $penggunaan = Penggunaan::with('tagihans')->findOrFail($id);
 
-        try {
-            return DB::transaction(function () use ($request, $id) {
-                $penggunaan = Penggunaan::lockForUpdate()->findOrFail($id);
-
-                $tagihans = Tagihan::where('id_penggunaan', $penggunaan->id_penggunaan)
-                    ->lockForUpdate()
-                    ->get();
-
-                if ($tagihans->contains(fn ($t) => $t->isLunas())) {
-                    return redirect()->route('penggunaan.show', $penggunaan->id_penggunaan)
-                        ->with('error', self::PESAN_TERKUNCI);
-                }
-
-                $duplikat = Penggunaan::where('id_pelanggan', $request->id_pelanggan)
-                    ->where('bulan', $request->bulan)
-                    ->where('tahun', $request->tahun)
-                    ->where('id_penggunaan', '!=', $penggunaan->id_penggunaan)
-                    ->exists();
-
-                if ($duplikat) {
-                    return back()->withInput()->withErrors(['error' => self::PESAN_DUPLIKAT]);
-                }
-
-                $penggunaan->update([
-                    'id_pelanggan' => $request->id_pelanggan,
-                    'bulan' => $request->bulan,
-                    'tahun' => $request->tahun,
-                    'meter_awal' => $request->meter_awal,
-                    'meter_akhir' => $request->meter_akhir,
-                ]);
-
-                foreach ($tagihans as $tagihan) {
-                    $this->sinkronkanTagihan($tagihan, $penggunaan);
-                }
-
-                return redirect()->route('penggunaan.index')
-                    ->with('success', 'Data penggunaan berhasil diperbarui');
-            });
-        } catch (UniqueConstraintViolationException $e) {
-            return back()->withInput()->withErrors(['error' => self::PESAN_DUPLIKAT]);
+        if ($penggunaan->tagihan && $penggunaan->tagihan->isLunas()) {
+            return redirect()
+                ->route('penggunaan.index')
+                ->with('error', 'Data penggunaan tidak dapat diubah karena tagihan periode ini sudah lunas.');
         }
+
+        $validated = $request->validate(
+            [
+                'meter_awal' => 'required|integer|min:0',
+                'meter_akhir' => 'required|integer|gt:meter_awal',
+            ],
+            [
+                'meter_akhir.gt' => 'Meter akhir harus lebih besar dari meter awal.',
+            ],
+        );
+
+        // Cari periode tepat sebelum bulan & tahun penggunaan yang sedang diedit
+        $periodeSaatIni = $penggunaan->tahun * 100 + $penggunaan->bulan;
+
+        $penggunaanSebelumnya = Penggunaan::where('id_pelanggan', $penggunaan->id_pelanggan)
+            ->where('id_penggunaan', '!=', $penggunaan->id_penggunaan)
+            ->whereRaw('(tahun * 100 + bulan) < ?', [$periodeSaatIni])
+            ->orderByDesc('tahun')
+            ->orderByDesc('bulan')
+            ->first();
+
+        if ($penggunaanSebelumnya && (int) $validated['meter_awal'] < (int) $penggunaanSebelumnya->meter_akhir) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'meter_awal' => "Meter awal tidak boleh lebih kecil dari meter akhir periode sebelumnya ({$penggunaanSebelumnya->meter_akhir} kWh).",
+                ]);
+        }
+
+        $penggunaan->update($validated);
+
+        // Sinkronkan jumlah_meter & total_tagihan jika tagihan terkait belum lunas
+        if ($penggunaan->tagihan && !$penggunaan->tagihan->isLunas()) {
+            $jumlahMeter = $validated['meter_akhir'] - $validated['meter_awal'];
+            $tarifPerKwh = (float) $penggunaan->tagihan->tarif_per_kwh;
+
+            $penggunaan->tagihan->update([
+                'jumlah_meter' => $jumlahMeter,
+                'total_tagihan' => $jumlahMeter * $tarifPerKwh,
+            ]);
+        }
+
+        return redirect()->route('penggunaan.index')->with('success', 'Data penggunaan listrik berhasil diperbarui.');
     }
 
     public function destroy(string $id)
@@ -331,23 +340,23 @@ class PenggunaanController extends Controller
         return DB::transaction(function () use ($id) {
             $penggunaan = Penggunaan::lockForUpdate()->findOrFail($id);
 
-            $tagihans = Tagihan::where('id_penggunaan', $penggunaan->id_penggunaan)
-                ->lockForUpdate()
-                ->get();
+            $tagihans = Tagihan::where('id_penggunaan', $penggunaan->id_penggunaan)->lockForUpdate()->get();
 
-            if ($tagihans->contains(fn ($t) => $t->isLunas())) {
+            if ($tagihans->contains(fn($t) => $t->isLunas())) {
                 return back()->with('error', self::PESAN_TERKUNCI);
             }
 
             if (Pembayaran::whereIn('id_tagihan', $tagihans->pluck('id_tagihan'))->exists()) {
-                return back()->with('error', 'Data ini punya riwayat pembayaran (termasuk yang dibatalkan), jadi tidak bisa dihapus.');
+                return back()->with(
+                    'error',
+                    'Data ini punya riwayat pembayaran (termasuk yang dibatalkan), jadi tidak bisa dihapus.',
+                );
             }
 
             $penggunaan->tagihans()->delete();
             $penggunaan->delete();
 
-            return redirect()->route('penggunaan.index')
-                ->with('success', 'Data penggunaan berhasil dihapus');
+            return redirect()->route('penggunaan.index')->with('success', 'Data penggunaan berhasil dihapus');
         });
     }
 
@@ -360,16 +369,13 @@ class PenggunaanController extends Controller
 
         if ($tahun && $bulan) {
             $query->where(function ($q) use ($tahun, $bulan) {
-                $q->where('tahun', '<', $tahun)
-                    ->orWhere(function ($q2) use ($tahun, $bulan) {
-                        $q2->where('tahun', $tahun)->where('bulan', '<', $bulan);
-                    });
+                $q->where('tahun', '<', $tahun)->orWhere(function ($q2) use ($tahun, $bulan) {
+                    $q2->where('tahun', $tahun)->where('bulan', '<', $bulan);
+                });
             });
         }
 
-        return $query->orderBy('tahun', 'desc')
-            ->orderBy('bulan', 'desc')
-            ->first();
+        return $query->orderBy('tahun', 'desc')->orderBy('bulan', 'desc')->first();
     }
 
     private function buatTagihan(Penggunaan $penggunaan): void
@@ -384,7 +390,10 @@ class PenggunaanController extends Controller
             'jumlah_meter' => $penggunaan->jumlah_meter,
             'tarif_per_kwh' => $pelanggan->tarif->tarif_per_kwh,
             'status' => 'belum_lunas',
-            'tanggal_jatuh_tempo' => Tagihan::hitungTanggalJatuhTempo((int) $penggunaan->bulan, (int) $penggunaan->tahun),
+            'tanggal_jatuh_tempo' => Tagihan::hitungTanggalJatuhTempo(
+                (int) $penggunaan->bulan,
+                (int) $penggunaan->tahun,
+            ),
             'denda' => 0,
         ]);
         $tagihan->hitungTotal();
@@ -402,7 +411,10 @@ class PenggunaanController extends Controller
         $tagihan->bulan = $penggunaan->bulan;
         $tagihan->tahun = $penggunaan->tahun;
         $tagihan->jumlah_meter = $penggunaan->jumlah_meter;
-        $tagihan->tanggal_jatuh_tempo = Tagihan::hitungTanggalJatuhTempo((int) $penggunaan->bulan, (int) $penggunaan->tahun);
+        $tagihan->tanggal_jatuh_tempo = Tagihan::hitungTanggalJatuhTempo(
+            (int) $penggunaan->bulan,
+            (int) $penggunaan->tahun,
+        );
         $tagihan->hitungTotal();
         $tagihan->save();
     }
