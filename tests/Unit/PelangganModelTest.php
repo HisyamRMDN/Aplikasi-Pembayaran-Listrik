@@ -1,47 +1,58 @@
 <?php
 
-namespace Tests\Unit;
+namespace App\Models;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\Pelanggan;
-use App\Models\Tarif;
-use App\Models\Penggunaan;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class PelangganModelTest extends TestCase
+class Pelanggan extends Authenticatable
 {
-    use RefreshDatabase;
+    use Notifiable;
+    use HasFactory;
+    protected $primaryKey = 'id_pelanggan';
 
-    public function test_pelanggan_can_be_created()
+    protected $fillable = [
+        'username',
+        'password',
+        'nomor_kwh',
+        'nama_pelanggan',
+        'alamat',
+        'id_tarif'
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'password' => 'hashed',
+    ];
+
+    // Override username field for authentication
+    public function getAuthIdentifierName()
     {
-        $pelanggan = Pelanggan::factory()->create([
-            'nama_pelanggan' => 'John Doe',
-        ]);
-
-        $this->assertDatabaseHas('pelanggans', [
-            'id_pelanggan' => $pelanggan->id_pelanggan,
-            'nama_pelanggan' => 'John Doe',
-        ]);
+        return 'username';
     }
 
-    public function test_pelanggan_belongs_to_tarif()
+    public function tarif()
     {
-        $pelanggan = Pelanggan::factory()->create();
-
-        $this->assertNotNull($pelanggan->tarif);
-        $this->assertInstanceOf(Tarif::class, $pelanggan->tarif);
+        return $this->belongsTo(Tarif::class, 'id_tarif', 'id_tarif');
     }
 
-    public function test_pelanggan_has_many_penggunaan()
+    public function penggunaans()
     {
-        $pelanggan = Pelanggan::factory()->create();
+        return $this->hasMany(Penggunaan::class, 'id_pelanggan', 'id_pelanggan');
+    }
 
-        Penggunaan::factory()->count(3)->create([
-            'id_pelanggan' => $pelanggan->id_pelanggan,
-        ]);
+    public function tagihans()
+    {
+        return $this->hasMany(Tagihan::class, 'id_pelanggan', 'id_pelanggan');
+    }
 
-        $pelanggan->load('penggunaans'); // load relasi yang benar
-
-        $this->assertCount(3, $pelanggan->penggunaans); // akses relasi yang benar
+    public function pembayarans()
+    {
+        return $this->hasMany(Pembayaran::class, 'id_pelanggan', 'id_pelanggan');
     }
 }

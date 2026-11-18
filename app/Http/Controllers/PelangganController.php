@@ -7,6 +7,7 @@ use App\Models\Pelanggan;
 use App\Models\Tarif;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Tagihan;
 
 class PelangganController extends Controller
 {
@@ -133,5 +134,77 @@ class PelangganController extends Controller
         $penggunaan = $pelanggan->penggunaans()->orderByDesc('tahun')->orderByDesc('bulan')->get();
 
         return view('pelanggan.penggunaan', compact('penggunaan', 'pelanggan'));
+    }
+
+    public function struk(string $id)
+    {
+        /** @var Pelanggan $pelanggan */
+        $pelanggan = Auth::guard('pelanggan')->user();
+
+        $tagihan = Tagihan::with([
+            'pelanggan.tarif',
+            'penggunaan',
+            'pembayarans' => fn ($q) => $q->where('status', 'berhasil')->with('user'),
+        ])
+            ->where('id_pelanggan', $pelanggan->id_pelanggan)
+            ->findOrFail($id);
+
+        $pembayaran = $tagihan->pembayarans->first();
+
+        if (! $tagihan->isLunas() || ! $pembayaran) {
+            return redirect()->route('pelanggan.tagihan')
+                ->with('error', 'Struk pembayaran hanya tersedia untuk tagihan yang sudah lunas.');
+        }
+
+        return view('pelanggan.struk', compact('tagihan', 'pembayaran', 'pelanggan'));
+    }
+
+    public function editProfil()
+    {
+        /** @var Pelanggan $pelanggan */
+        $pelanggan = Auth::guard('pelanggan')->user();
+        $pelanggan->load('tarif');
+
+        return view('pelanggan.profil', compact('pelanggan'));
+    }
+
+    public function updateProfil(Request $request)
+    {
+        /** @var Pelanggan $pelanggan */
+        $pelanggan = Auth::guard('pelanggan')->user();
+
+        $validated = $request->validate([
+            'nama_pelanggan' => 'required|string|max:100',
+            'alamat' => 'required|string|max:255',
+        ]);
+
+        $pelanggan->update($validated);
+
+        return redirect()->route('pelanggan.profil.edit')
+            ->with('success', 'Data profil berhasil diperbarui.');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        /** @var Pelanggan $pelanggan */
+        $pelanggan = Auth::guard('pelanggan')->user();
+
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        if (! Hash::check($request->current_password, $pelanggan->password)) {
+            return back()->withErrors([
+                'current_password' => 'Kata sandi saat ini tidak sesuai.',
+            ]);
+        }
+
+        $pelanggan->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()->route('pelanggan.profil.edit')
+            ->with('success', 'Kata sandi berhasil diperbarui.');
     }
 }

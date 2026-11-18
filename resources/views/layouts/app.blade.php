@@ -12,7 +12,7 @@
 
     @if (!request()->routeIs('login') && !request()->routeIs('pelanggan.activate'))
         <!-- Top Header Minimalis -->
-        <header class="sticky top-0 z-40 bg-white border-b border-zinc-200">
+        <header class="sticky top-0 z-40 bg-white border-b border-zinc-200 print:hidden">
             <div class="px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     @if (Auth::check() || Auth::guard('pelanggan')->check())
@@ -135,6 +135,15 @@
                                     </svg>
                                     Tagihan Listrik
                                 </a>
+                                <a href="{{ route('pelanggan.profil.edit') }}"
+                                    class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition-colors">
+                                    <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor"
+                                        stroke-width="1.75" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                    </svg>
+                                    Profil & Akun
+                                </a>
                                 <form method="POST" action="{{ route('pelanggan.logout') }}">
                                     @csrf
                                     <button type="submit"
@@ -160,11 +169,11 @@
         <div class="flex-1 flex">
             <!-- Overlay Mobile -->
             <div id="sidebarBackdrop" onclick="toggleMobileSidebar()"
-                class="hidden fixed inset-0 z-30 bg-zinc-950/30 lg:hidden"></div>
+                class="hidden fixed inset-0 z-30 bg-zinc-950/30 lg:hidden print:hidden"></div>
 
             <!-- Admin Sidebar Bersih -->
             <aside id="appSidebar"
-                class="fixed inset-y-0 left-0 z-30 w-60 bg-white border-r border-zinc-200 pt-14 lg:pt-0 lg:static lg:block -translate-x-full lg:translate-x-0 transition-transform duration-200">
+                class="fixed inset-y-0 left-0 z-30 w-60 bg-white border-r border-zinc-200 pt-14 lg:pt-0 lg:static lg:block -translate-x-full lg:translate-x-0 transition-transform duration-200 print:hidden">
                 <div class="p-4 space-y-6">
                     <div>
                         <p class="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
@@ -181,15 +190,17 @@
                                 Dashboard
                             </a>
 
-                            <a href="{{ route('pelanggan.index') }}"
-                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('pelanggan.*') ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950' }}">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                                </svg>
-                                Pelanggan
-                            </a>
+                            @if (Auth::user()->isAdministrator())
+                                <a href="{{ route('pelanggan.index') }}"
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('pelanggan.*') ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950' }}">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                    </svg>
+                                    Pelanggan
+                                </a>
+                            @endif
 
                             <a href="{{ route('penggunaan.index') }}"
                                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('penggunaan.*') ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950' }}">
@@ -220,6 +231,28 @@
                                 </svg>
                                 Pembayaran
                             </a>
+
+                            <a href="{{ route('laporan.index') }}"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('laporan.*') ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950' }}">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                </svg>
+                                Laporan
+                            </a>
+
+                            @if (Auth::user()->isAdministrator())
+                                <a href="{{ route('tarif.index') }}"
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('tarif.*') ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950' }}">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                    </svg>
+                                    Golongan Tarif
+                                </a>
+                            @endif
                         </nav>
                     </div>
                 </div>
@@ -233,11 +266,11 @@
     @elseauth('pelanggan')
         <div class="flex-1 flex">
             <div id="sidebarBackdrop" onclick="toggleMobileSidebar()"
-                class="hidden fixed inset-0 z-30 bg-zinc-950/30 lg:hidden"></div>
+                class="hidden fixed inset-0 z-30 bg-zinc-950/30 lg:hidden print:hidden"></div>
 
             <!-- Customer Sidebar Bersih -->
             <aside id="appSidebar"
-                class="fixed inset-y-0 left-0 z-30 w-60 bg-white border-r border-zinc-200 pt-14 lg:pt-0 lg:static lg:block -translate-x-full lg:translate-x-0 transition-transform duration-200">
+                class="fixed inset-y-0 left-0 z-30 w-60 bg-white border-r border-zinc-200 pt-14 lg:pt-0 lg:static lg:block -translate-x-full lg:translate-x-0 transition-transform duration-200 print:hidden">
                 <div class="p-4 space-y-6">
                     <div>
                         <p class="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
@@ -255,7 +288,7 @@
                             </a>
 
                             <a href="{{ route('pelanggan.tagihan') }}"
-                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('pelanggan.tagihan') ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950' }}">
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('pelanggan.tagihan*') ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950' }}">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -264,14 +297,24 @@
                                 Tagihan Listrik
                             </a>
 
-                            <a href="{{ route('tarif.index') }}"
-                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('tarif.*') ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950' }}">
+                            <a href="{{ route('pelanggan.tarif') }}"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('pelanggan.tarif') ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950' }}">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                                 </svg>
                                 Golongan Tarif
+                            </a>
+
+                            <a href="{{ route('pelanggan.profil.edit') }}"
+                                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->routeIs('pelanggan.profil.*') ? 'bg-zinc-950 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950' }}">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                </svg>
+                                Profil & Akun
                             </a>
                         </nav>
                     </div>

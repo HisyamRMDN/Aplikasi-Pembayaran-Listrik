@@ -1,179 +1,215 @@
 <?php
 
-namespace Tests\Feature;
+namespace App\Http\Controllers;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Tarif;
-use App\Models\Tagihan;
-use App\Models\Pelanggan;
 use App\Models\Pembayaran;
-use App\Models\Penggunaan;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Tagihan;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
-class PembayaranControllerTest extends TestCase
+class PembayaranController extends Controller
 {
-    use RefreshDatabase;
-
-    public function test_index_returns_successful_response()
+    public function index(Request $request)
     {
-        $admin = User::factory()->create();
-        $this->actingAs($admin);
+        // Hanya pembayaran yang masih berlaku. Yang dibatalkan terlihat di detail tagihan.
+        $query = Pembayaran::aktif()->with('tagihan', 'pelanggan', 'user');
 
-        $response = $this->get(route('pembayaran.index'));
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.pembayaran.index');
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('pelanggan', function ($q) use ($search) {
+                $q->where('nama_pelanggan', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('tanggal')) {
+            $tanggal = Carbon::parse($request->input('tanggal'))->format('Y-m-d');
+            $query->whereDate('tanggal_pembayaran', $tanggal);
+        }
+
+        $pembayarans = $query->latest()->paginate(10)->withQueryString();
+
+        $today = Carbon::today();
+
+        $jumlahPembayaranHariIni = Pembayaran::aktif()->whereDate('tanggal_pembayaran', $today)->count();
+        $totalNominalHariIni = Pembayaran::aktif()->whereDate('tanggal_pembayaran', $today)->sum('total_bayar');
+
+        return view('admin.pembayaran.index', compact('pembayarans', 'jumlahPembayaranHariIni', 'totalNominalHariIni'));
     }
 
-    public function test_create_view_contains_belum_lunas_tagihans()
+    public function create()
     {
-        $admin = User::factory()->create();
-        $this->actingAs($admin);
-
-        Tagihan::factory()->create(['status' => 'belum_lunas']);
-
-        $response = $this->get(route('pembayaran.create'));
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.pembayaran.create');
+        $tagihans = Tagihan::with('pelanggan')
+            ->where('status', 'belum_lunas')
+            ->get();
+        return view('admin.pembayaran.create', compact('tagihans'));
     }
 
-    public function test_store_successful_pembayaran()
+    public function store(Request $request)
     {
-        $admin = User::factory()->create();
-        $this->actingAs($admin);
-
-        // Buat tarif dulu
-        $tarif = Tarif::factory()->create(['tarif_per_kwh' => 1000]);
-
-        // Buat pelanggan dengan tarif tersebut
-        $pelanggan = Pelanggan::factory()->create([
-            'id_tarif' => $tarif->id_tarif,
+        $request->validate([
+            'id_tagihan' => 'required|exists:tagihans,id_tagihan',
+            'tanggal_pembayaran' => 'required|date',
+            'biaya_admin' => 'required|numeric|min:0',
         ]);
 
-        // Buat penggunaan
-        $penggunaan = Penggunaan::factory()->create([
-            'id_pelanggan' => $pelanggan->id_pelanggan,
-            'meter_awal' => 100,
-            'meter_akhir' => 200,
-        ]);
+        return DB::transaction(function () use ($request) {
+            // Kunci baris tagihan agar dua petugas tidak melunasi tagihan yang sama bersamaan.
+            $tagihan = Tagihan::where('id_tagihan', $request->id_tagihan)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $jumlah_meter = $penggunaan->meter_akhir - $penggunaan->meter_awal;
+            if ($tagihan->isLunas()) {
+                return back()->withInput()->withErrors(['error' => 'Tagihan ini sudah lunas.']);
+            }
 
-        $tagihan = Tagihan::factory()->create([
-            'id_pelanggan' => $pelanggan->id_pelanggan,
-            'id_penggunaan' => $penggunaan->id_penggunaan,
-            'status' => 'belum_lunas',
-            'jumlah_meter' => $jumlah_meter,
-        ]);
+            // total_tagihan adalah snapshot, tidak terpengaruh perubahan tarif.
+            $tanggalBayar = Carbon::parse($request->tanggal_pembayaran);
+            $denda = $tagihan->estimasiDenda($tanggalBayar);
+            $totalBayar = $tagihan->total_tagihan + $denda + $request->biaya_admin;
 
-        $biaya_admin = 2500;
-        $total_tagihan = $jumlah_meter * $tarif->tarif_per_kwh;
-        $total_bayar = $total_tagihan + $biaya_admin;
+            Pembayaran::create([
+                'id_tagihan' => $tagihan->id_tagihan,
+                'id_pelanggan' => $tagihan->id_pelanggan,
+                'tanggal_pembayaran' => $request->tanggal_pembayaran,
+                'bulan_bayar' => $this->getNamaBulan($tagihan->bulan) . ' ' . $tagihan->tahun,
+                'biaya_admin' => $request->biaya_admin,
+                'total_bayar' => $totalBayar,
+                'status' => 'berhasil',
+                'id_user' => Auth::id()
+            ]);
 
-        $response = $this->post(route('pembayaran.store'), [
-            'id_tagihan' => $tagihan->id_tagihan,
-            'tanggal_pembayaran' => now()->format('Y-m-d'),
-            'biaya_admin' => $biaya_admin,
-        ]);
+            // Di dalam PembayaranController@store:
 
-        $response->assertRedirect(route('pembayaran.index'));
 
-        $this->assertDatabaseHas('pembayarans', [
-            'id_tagihan' => $tagihan->id_tagihan,
-            'total_bayar' => $total_bayar,
-        ]);
-
-        $this->assertDatabaseHas('tagihans', [
-            'id_tagihan' => $tagihan->id_tagihan,
+            $tagihan->update([
             'status' => 'lunas',
+            'denda' => $denda,
         ]);
+
+            return redirect()->route('pembayaran.index')
+                ->with('success', 'Pembayaran berhasil diproses');
+        });
     }
 
-
-    public function test_store_fails_when_tagihan_already_lunas()
+    public function show(string $id)
     {
-        $admin = User::factory()->create();
-        $this->actingAs($admin);
-
-        $tagihan = Tagihan::factory()->create(['status' => 'lunas']);
-
-        $response = $this->post(route('pembayaran.store'), [
-            'id_tagihan' => $tagihan->id_tagihan,
-            'tanggal_pembayaran' => now()->format('Y-m-d'),
-            'biaya_admin' => 2500,
-        ]);
-
-        $response->assertSessionHasErrors('error');
-
-        $this->assertDatabaseMissing('pembayarans', [
-            'id_tagihan' => $tagihan->id_tagihan,
-        ]);
+        $pembayaran = Pembayaran::with('tagihan', 'pelanggan', 'user', 'userPembatal')->findOrFail($id);
+        return view('admin.pembayaran.show', compact('pembayaran'));
     }
 
-    public function test_show_returns_pembayaran_detail()
+    public function edit(string $id)
     {
-        $admin = User::factory()->create();
-        $this->actingAs($admin);
+        $pembayaran = Pembayaran::with('tagihan', 'pelanggan')->findOrFail($id);
 
-        $pembayaran = Pembayaran::factory()->create();
+        if ($pembayaran->isBatal()) {
+            return redirect()->route('pembayaran.show', $pembayaran->id_pembayaran)
+                ->with('error', 'Pembayaran yang sudah dibatalkan tidak bisa diubah.');
+        }
 
-        $response = $this->get(route('pembayaran.show', $pembayaran->id_pembayaran));
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.pembayaran.show');
-        $response->assertViewHas('pembayaran');
+        return view('admin.pembayaran.edit', compact('pembayaran'));
     }
 
-    public function test_update_pembayaran_data()
+    public function update(Request $request, string $id)
     {
-        $admin = User::factory()->create();
-        $this->actingAs($admin);
-
-        $pembayaran = Pembayaran::factory()->create(['biaya_admin' => 1000]);
-
-        $response = $this->put(route('pembayaran.update', $pembayaran->id_pembayaran), [
-            'tanggal_pembayaran' => now()->format('Y-m-d'),
-            'biaya_admin' => 2000,
+        $request->validate([
+            'tanggal_pembayaran' => 'required|date',
+            'biaya_admin' => 'required|numeric|min:0',
         ]);
 
-        $response->assertRedirect(route('pembayaran.index'));
+        return DB::transaction(function () use ($request, $id) {
+            $pembayaran = Pembayaran::lockForUpdate()->findOrFail($id);
 
-        $this->assertDatabaseHas('pembayarans', [
-            'id_pembayaran' => $pembayaran->id_pembayaran,
-            'biaya_admin' => 2000,
-        ]);
+            if ($pembayaran->isBatal()) {
+                return redirect()->route('pembayaran.show', $pembayaran->id_pembayaran)
+                    ->with('error', 'Pembayaran yang sudah dibatalkan tidak bisa diubah.');
+            }
+
+            // Di dalam PembayaranController@store:
+            $tanggalBayar = Carbon::parse($request->tanggal_pembayaran);
+            $denda = $tagihan->estimasiDenda($tanggalBayar);
+            $totalBayar = $tagihan->total_tagihan + $denda + $request->biaya_admin;
+
+            $pembayaran->update([
+                'tanggal_pembayaran' => $request->tanggal_pembayaran,
+                'biaya_admin' => $request->biaya_admin,
+                'total_bayar' => $totalBayar
+            ]);
+
+            $pembayaran->tagihan->update(['denda' => $denda]);
+
+            return redirect()->route('pembayaran.index')
+                ->with('success', 'Data pembayaran berhasil diperbarui');
+        });
     }
 
-    public function test_destroy_deletes_pembayaran_and_updates_tagihan()
+    /**
+     * Membatalkan pembayaran (bukan menghapus): barisnya tetap ada sebagai jejak audit.
+     * Route DELETE yang sama dipakai; kirim field "alasan" dari form bila ada.
+     */
+    public function destroy(Request $request, string $id)
     {
-        $admin = User::factory()->create();
-        $this->actingAs($admin);
-
-        $tagihan = Tagihan::factory()->create(['status' => 'lunas']);
-        $pembayaran = Pembayaran::factory()->create(['id_tagihan' => $tagihan->id_tagihan]);
-
-        $response = $this->delete(route('pembayaran.destroy', $pembayaran->id_pembayaran));
-
-        $response->assertRedirect(route('pembayaran.index'));
-
-        $this->assertDatabaseMissing('pembayarans', [
-            'id_pembayaran' => $pembayaran->id_pembayaran
+        $request->validate([
+            'alasan' => 'nullable|string|max:255',
         ]);
 
-        $this->assertDatabaseHas('tagihans', [
-            'id_tagihan' => $tagihan->id_tagihan,
-            'status' => 'belum_lunas'
-        ]);
+        return DB::transaction(function () use ($request, $id) {
+            $pembayaran = Pembayaran::lockForUpdate()->findOrFail($id);
+
+            if ($pembayaran->isBatal()) {
+                return back()->with('error', 'Pembayaran ini sudah dibatalkan sebelumnya.');
+            }
+
+            $tagihan = Tagihan::lockForUpdate()->findOrFail($pembayaran->id_tagihan);
+
+            $pembayaran->update([
+                'status' => 'batal',
+                'dibatalkan_pada' => now(),
+                'alasan_batal' => $request->input('alasan') ?: 'Dibatalkan oleh petugas',
+                'id_user_batal' => Auth::id(),
+            ]);
+
+            $tagihan->update([
+                'status' => 'belum_lunas',
+                'denda' => 0,
+            ]);
+
+            return redirect()->route('pembayaran.index')
+                ->with('success', 'Pembayaran dibatalkan. Tagihan kembali berstatus belum lunas.');
+        });
     }
 
-    public function test_pelanggan_tagihan_view()
+    // For customer view
+    public function pelangganTagihan()
     {
-        $pelanggan = Pelanggan::factory()->create();
-        $this->actingAs($pelanggan, 'pelanggan');
+        $pelanggan = Auth::guard('pelanggan')->user();
+        $tagihans = Tagihan::with(['penggunaan', 'pelanggan.tarif'])
+            ->where('id_pelanggan', $pelanggan->id_pelanggan)
+            ->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc')
+            ->get();
 
-        $response = $this->get(route('pelanggan.tagihan'));
+        return view('pelanggan.tagihan', compact('tagihans'));
+    }
 
-        $response->assertStatus(200);
-        $response->assertViewIs('pelanggan.tagihan');
+    private function getNamaBulan($bulan)
+    {
+        $namaBulan = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
+        ];
+
+        return $namaBulan[$bulan] ?? 'Tidak Diketahui';
     }
 }

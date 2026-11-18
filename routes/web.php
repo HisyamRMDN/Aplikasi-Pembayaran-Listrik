@@ -8,6 +8,8 @@ use App\Http\Controllers\PenggunaanController;
 use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Middleware\CheckLevel;
+use App\Http\Controllers\TarifController;
+use App\Http\Controllers\LaporanController;
 
 // Public routes
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
@@ -25,28 +27,43 @@ Route::post('/pelanggan/logout', [AuthController::class, 'pelangganLogout'])->na
 Route::middleware('ensure.auth:web')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Pelanggan management
-    Route::resource('pelanggan', PelangganController::class);
-
-    // Penggunaan management
-    // Penggunaan management (Rute khusus wajib di atas Route::resource)
+    // Penggunaan kWh (Admin & Kasir)
     Route::get('/penggunaan/massal', [PenggunaanController::class, 'massal'])->name('penggunaan.massal');
     Route::post('/penggunaan/massal', [PenggunaanController::class, 'storeMassal'])->name('penggunaan.massal.store');
-    Route::get('/penggunaan/meter-terakhir', [PenggunaanController::class, 'getMeterTerakhir'])->name('penggunaan.meter-terakhir');
+    Route::get('/penggunaan/meter-terakhir', [PenggunaanController::class, 'getMeterTerakhir'])->name(
+        'penggunaan.meter-terakhir',
+    );
     Route::resource('penggunaan', PenggunaanController::class);
 
-    // Tagihan management
+    // Tagihan (Admin & Kasir)
     Route::resource('tagihan', TagihanController::class);
 
-    // Pembayaran management
-    Route::resource('pembayaran', PembayaranController::class);
+    // Pembayaran (Admin & Kasir - kecuali pembatalan/destroy)
+    Route::resource('pembayaran', PembayaranController::class)->except(['destroy']);
 
-    Route::resource('tarif', TarifController::class);
+    // Laporan Rekapitulasi (Admin & Kasir)
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/export-csv', [LaporanController::class, 'exportCsv'])->name('laporan.export-csv');
+
+    // Khusus Administrator
+    Route::middleware('admin.only')->group(function () {
+        Route::resource('pelanggan', PelangganController::class);
+        Route::resource('tarif', TarifController::class);
+        Route::delete('/pembayaran/{pembayaran}', [PembayaranController::class, 'destroy'])->name('pembayaran.destroy');
+    });
 });
 
 Route::middleware('ensure.auth:pelanggan')->group(function () {
     Route::get('/customer/dashboard', [DashboardController::class, 'pelangganDashboard'])->name('pelanggan.dashboard');
     Route::get('/customer/tagihan', [PembayaranController::class, 'pelangganTagihan'])->name('pelanggan.tagihan');
+    Route::get('/customer/tagihan/{id}/struk', [PelangganController::class, 'struk'])->name('pelanggan.tagihan.struk');
     Route::get('/customer/penggunaan', [PelangganController::class, 'riwayatPenggunaan'])->name('pelanggan.penggunaan');
+    Route::get('/customer/tarif', [TarifController::class, 'pelangganIndex'])->name('pelanggan.tarif');
 
+    // Profil & Ganti Password Pelanggan
+    Route::get('/customer/profil', [PelangganController::class, 'editProfil'])->name('pelanggan.profil.edit');
+    Route::put('/customer/profil', [PelangganController::class, 'updateProfil'])->name('pelanggan.profil.update');
+    Route::put('/customer/profil/password', [PelangganController::class, 'updatePassword'])->name(
+        'pelanggan.profil.password',
+    );
 });

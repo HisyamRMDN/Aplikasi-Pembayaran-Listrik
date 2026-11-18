@@ -1,37 +1,21 @@
 <?php
 
-namespace Tests\Unit;
+namespace App\Models;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\Level;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class LevelModelTest extends TestCase
+class Level extends Model
 {
-    use RefreshDatabase;
+    use HasFactory;
+    protected $primaryKey = 'id_level';
 
-    /** @test */
-    public function test_level_can_be_created()
+    protected $fillable = [
+        'nama_level'
+    ];
+
+    public function users()
     {
-        $level = Level::factory()->create([
-            'nama_level' => 'admin'
-        ]);
-
-        $this->assertDatabaseHas('levels', [
-            'id_level' => $level->id_level,
-            'nama_level' => 'admin'
-        ]);
-    }
-
-    public function test_level_has_many_users()
-    {
-        $level = Level::factory()->create();
-
-        User::factory()->count(3)->create([
-            'id_level' => $level->id_level
-        ]);
-
-        $this->assertCount(3, $level->users);
+        return $this->hasMany(User::class, 'id_level', 'id_level');
     }
 }

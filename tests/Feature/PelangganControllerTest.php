@@ -1,142 +1,137 @@
 <?php
 
-namespace Tests\Feature;
+namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Pelanggan;
 use App\Models\Tarif;
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Tests\TestCase;
+use Illuminate\Support\Facades\Auth;
 
-class PelangganControllerTest extends TestCase
+class PelangganController extends Controller
 {
-    use RefreshDatabase;
-
-    private function actingAsAdmin()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
     {
-        $admin = User::factory()->create();
-        $this->actingAs($admin); // Sesuaikan jika kamu pakai guard lain
+
+        $query = Pelanggan::with('tarif')->withCount(['penggunaans', 'tagihans']);
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pelanggan', 'like', '%' . $search . '%')
+                    ->orWhere('nomor_kwh', 'like', '%' . $search . '%');
+            });
+        }
+
+        $pelanggans = $query->paginate(10)->withQueryString(); // penting agar parameter search tetap ada di pagination
+
+        return view('admin.pelanggan.index', compact('pelanggans'));
     }
 
-    public function test_index_displays_pelanggans()
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
-        $this->actingAsAdmin();
 
-        $tarif = Tarif::factory()->create();
-        Pelanggan::factory()->count(2)->create(['id_tarif' => $tarif->id_tarif]);
-
-        $response = $this->get(route('pelanggan.index'));
-
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.pelanggan.index');
-        $response->assertViewHas('pelanggans');
+        $tarifs = Tarif::all();
+        return view('admin.pelanggan.create', compact('tarifs'));
     }
 
-    public function test_create_displays_form()
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
     {
-        $this->actingAsAdmin();
-
-        Tarif::factory()->count(2)->create();
-
-        $response = $this->get(route('pelanggan.create'));
-
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.pelanggan.create');
-        $response->assertViewHas('tarifs');
-    }
-
-    public function test_store_creates_pelanggan()
-    {
-        $this->actingAsAdmin();
-
-        $tarif = Tarif::factory()->create();
-
-        $data = [
-            'username' => 'pelanggan1',
-            'password' => 'secret123',
-            'nomor_kwh' => '1234567890',
-            'nama_pelanggan' => 'Nama Pelanggan',
-            'alamat' => 'Jl. Testing',
-            'id_tarif' => $tarif->id_tarif,
-        ];
-
-        $response = $this->post(route('pelanggan.store'), $data);
-
-        $response->assertRedirect(route('pelanggan.index'));
-        $this->assertDatabaseHas('pelanggans', [
-            'username' => 'pelanggan1',
-            'nomor_kwh' => '1234567890',
-        ]);
-    }
-
-    public function test_show_displays_detail()
-    {
-        $this->actingAsAdmin();
-
-        $tarif = Tarif::factory()->create();
-        $pelanggan = Pelanggan::factory()->create(['id_tarif' => $tarif->id_tarif]);
-
-        $response = $this->get(route('pelanggan.show', $pelanggan->id_pelanggan));
-
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.pelanggan.show');
-        $response->assertViewHas('pelanggan');
-    }
-
-    public function test_edit_displays_form()
-    {
-        $this->actingAsAdmin();
-
-        $tarif = Tarif::factory()->create();
-        $pelanggan = Pelanggan::factory()->create(['id_tarif' => $tarif->id_tarif]);
-
-        $response = $this->get(route('pelanggan.edit', $pelanggan->id_pelanggan));
-
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.pelanggan.edit');
-        $response->assertViewHas(['pelanggan', 'tarifs']);
-    }
-
-    public function test_update_modifies_data()
-    {
-        $this->actingAsAdmin();
-
-        $tarif1 = Tarif::factory()->create();
-        $tarif2 = Tarif::factory()->create();
-        $pelanggan = Pelanggan::factory()->create([
-            'username' => 'userlama',
-            'nomor_kwh' => '111111',
-            'id_tarif' => $tarif1->id_tarif
+        $request->validate([
+            'nomor_kwh' => 'required|numeric|digits_between:11,12|unique:pelanggans,nomor_kwh',
+            'nama_pelanggan' => 'required|string|max:100',
+            'alamat' => 'required|string',
+            'id_tarif' => 'required|exists:tarifs,id_tarif'
         ]);
 
-        $data = [
-            'username' => 'userbaru',
-            'nomor_kwh' => '222222',
-            'nama_pelanggan' => 'Update Nama',
-            'alamat' => 'Alamat Baru',
-            'id_tarif' => $tarif2->id_tarif,
-        ];
-
-        $response = $this->put(route('pelanggan.update', $pelanggan->id_pelanggan), $data);
-
-        $response->assertRedirect(route('pelanggan.index'));
-        $this->assertDatabaseHas('pelanggans', [
-            'id_pelanggan' => $pelanggan->id_pelanggan,
-            'username' => 'userbaru',
-            'nomor_kwh' => '222222',
+        Pelanggan::create([
+            'nomor_kwh' => $request->nomor_kwh,
+            'nama_pelanggan' => $request->nama_pelanggan,
+            'alamat' => $request->alamat,
+            'id_tarif' => $request->id_tarif
         ]);
+
+        return redirect()->route('pelanggan.index')
+            ->with('success', 'Data meteran pelanggan berhasil ditambahkan');
     }
 
-    public function test_destroy_deletes_pelanggan()
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
     {
-        $this->actingAsAdmin();
+        $pelanggan = Pelanggan::with('tarif', 'penggunaans', 'tagihans')->findOrFail($id);
+        return view('admin.pelanggan.show', compact('pelanggan'));
+    }
 
-        $pelanggan = Pelanggan::factory()->create();
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $pelanggan = Pelanggan::findOrFail($id);
+        $tarifs = Tarif::all();
+        return view('admin.pelanggan.edit', compact('pelanggan', 'tarifs'));
+    }
 
-        $response = $this->delete(route('pelanggan.destroy', $pelanggan->id_pelanggan));
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        $pelanggan = Pelanggan::findOrFail($id);
 
-        $response->assertRedirect(route('pelanggan.index'));
-        $this->assertModelMissing($pelanggan);
+        $request->validate([
+            'nomor_kwh' => 'required|numeric|digits_between:11,12|unique:pelanggans,nomor_kwh,' . $id . ',id_pelanggan',
+            'nama_pelanggan' => 'required|string|max:100',
+            'alamat' => 'required|string',
+            'id_tarif' => 'required|exists:tarifs,id_tarif'
+        ]);
+
+        $pelanggan->update([
+            'nomor_kwh' => $request->nomor_kwh,
+            'nama_pelanggan' => $request->nama_pelanggan,
+            'alamat' => $request->alamat,
+            'id_tarif' => $request->id_tarif
+        ]);
+
+        return redirect()->route('pelanggan.index')
+            ->with('success', 'Data pelanggan berhasil diperbarui');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $pelanggan = Pelanggan::findOrFail($id);
+
+        if ($pelanggan->penggunaans()->exists() || $pelanggan->tagihans()->exists()) {
+            return redirect()->route('pelanggan.index')
+                ->with('error', 'Pelanggan tidak dapat dihapus karena masih memiliki riwayat penggunaan atau tagihan.');
+        }
+
+        $pelanggan->delete();
+
+        return redirect()->route('pelanggan.index')
+            ->with('success', 'Pelanggan berhasil dihapus');
+    }
+
+    public function riwayatPenggunaan()
+    {
+        $pelanggan = Auth::guard('pelanggan')->user();
+        $penggunaan = $pelanggan->penggunaans()->orderByDesc('tahun')->orderByDesc('bulan')->get();
+
+        return view('pelanggan.penggunaan', compact('penggunaan', 'pelanggan'));
     }
 }

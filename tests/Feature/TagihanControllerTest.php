@@ -1,154 +1,172 @@
 <?php
 
-namespace Tests\Feature;
+namespace App\Http\Controllers;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Tagihan;
 use App\Models\Pelanggan;
-use App\Models\Penggunaan;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Tagihan;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
-class TagihanControllerTest extends TestCase
+class TagihanController extends Controller
 {
-    use RefreshDatabase;
-
-    private function actingAsAdmin()
+    public function index(Request $request)
     {
-        $admin = User::factory()->create();
-        $this->actingAs($admin);
+        $query = Tagihan::with('pelanggan', 'penggunaan');
+
+        // Filter: search (nama pelanggan atau nomor KWH)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('pelanggan', function ($q) use ($search) {
+                $q->where('nama_pelanggan', 'like', '%' . $search . '%')
+                    ->orWhere('nomor_kwh', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('bulan')) {
+            $query->where('bulan', $request->input('bulan'));
+        }
+
+        $tagihans = $query->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc')
+            ->paginate(10)
+            ->appends($request->query());
+
+        return view('admin.tagihan.index', compact('tagihans'));
     }
 
-    public function test_index_shows_tagihan_list()
+    /**
+     * Form tagihan manual (tanpa data penggunaan).
+     * Tagihan yang berasal dari meter dibuat otomatis oleh PenggunaanController.
+     */
+    public function create()
     {
-        $this->actingAsAdmin();
-
-        Tagihan::factory()->count(3)->create();
-
-        $response = $this->get(route('tagihan.index'));
-
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.tagihan.index');
+        $pelanggans = Pelanggan::orderBy('nama_pelanggan')->get();
+        return view('admin.tagihan.create', compact('pelanggans'));
     }
 
-    public function test_create_form_loads_successfully()
+    public function store(Request $request)
     {
-        $this->actingAsAdmin();
+        $request->validate([
+            'id_pelanggan' => 'required|exists:pelanggans,id_pelanggan',
+            'bulan' => 'required|integer|min:1|max:12',
+            'tahun' => 'required|integer|min:2020',
+            'jumlah_meter' => 'required|integer|min:0',
+        ]); // <-- Pastikan kurung tutup validate() berhenti di sini, jangan ada 'denda' => 0 di dalamnya
 
-        $response = $this->get(route('tagihan.create'));
+        $pesanDuplikat = 'Tagihan untuk pelanggan ini pada bulan/tahun tersebut sudah ada';
 
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.tagihan.create');
+        try {
+            return DB::transaction(function () use ($request, $pesanDuplikat) {
+                $pelanggan = Pelanggan::with('tarif')->findOrFail($request->id_pelanggan);
+
+                $sudahAda = Tagihan::where('id_pelanggan', $pelanggan->id_pelanggan)
+                    ->where('bulan', $request->bulan)
+                    ->where('tahun', $request->tahun)
+                    ->exists();
+
+                if ($sudahAda) {
+                    return back()->withInput()->withErrors(['error' => $pesanDuplikat]);
+                }
+
+                $tagihan = new Tagihan([
+                    'id_penggunaan' => null,
+                    'id_pelanggan' => $pelanggan->id_pelanggan,
+                    'bulan' => $request->bulan,
+                    'tahun' => $request->tahun,
+                    'jumlah_meter' => $request->jumlah_meter,
+                    'tarif_per_kwh' => $pelanggan->tarif->tarif_per_kwh,
+                    'tanggal_jatuh_tempo' => Tagihan::hitungTanggalJatuhTempo((int) $request->bulan, (int) $request->tahun),
+                    'denda' => 0,
+                    'status' => 'belum_lunas',
+                ]);
+                $tagihan->hitungTotal();
+                $tagihan->save();
+
+                return redirect()->route('tagihan.index')
+                    ->with('success', 'Tagihan berhasil ditambahkan');
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            return back()->withInput()->withErrors(['error' => $pesanDuplikat]);
+        }
     }
 
-    public function test_store_new_tagihan()
+    public function show(string $id)
     {
-        $this->actingAsAdmin();
+        $tagihan = Tagihan::with('pelanggan.tarif', 'penggunaan', 'pembayarans.user')->findOrFail($id);
+        return view('admin.tagihan.show', compact('tagihan'));
+    }
 
-        $pelanggan = Pelanggan::factory()->create();
-        $penggunaan = Penggunaan::factory()->create([
-            'id_pelanggan' => $pelanggan->id_pelanggan
+    public function edit(string $id)
+    {
+        $tagihan = Tagihan::with('pelanggan.tarif')->findOrFail($id);
+
+        if ($alasan = $this->alasanTerkunci($tagihan)) {
+            return redirect()->route('tagihan.show', $tagihan->id_tagihan)->with('error', $alasan);
+        }
+
+        return view('admin.tagihan.edit', compact('tagihan'));
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $request->validate([
+            'jumlah_meter' => 'required|integer|min:0',
         ]);
 
-        $data = [
-            'id_pelanggan' => $pelanggan->id_pelanggan,
-            'id_penggunaan' => $penggunaan->id_penggunaan,
-            'bulan' => 7,
-            'tahun' => 2025,
-            'jumlah_meter' => 100,
-            'status' => 'belum_lunas'
-        ];
+        return DB::transaction(function () use ($request, $id) {
+            $tagihan = Tagihan::lockForUpdate()->findOrFail($id);
 
-        $response = $this->post(route('tagihan.store'), $data);
+            if ($alasan = $this->alasanTerkunci($tagihan)) {
+                return redirect()->route('tagihan.show', $tagihan->id_tagihan)->with('error', $alasan);
+            }
 
-        $response->assertRedirect(route('tagihan.index'));
-        $this->assertDatabaseHas('tagihans', $data);
+            $tagihan->jumlah_meter = $request->jumlah_meter;
+            $tagihan->hitungTotal(); // tarif tetap memakai snapshot tagihan
+            $tagihan->save();
+
+            return redirect()->route('tagihan.index')
+                ->with('success', 'Tagihan berhasil diperbarui');
+        });
     }
 
-    public function test_store_duplicate_tagihan_fails()
+    public function destroy(string $id)
     {
-        $this->actingAsAdmin();
+        return DB::transaction(function () use ($id) {
+            $tagihan = Tagihan::lockForUpdate()->findOrFail($id);
 
-        $pelanggan = Pelanggan::factory()->create();
+            if ($alasan = $this->alasanTerkunci($tagihan)) {
+                return back()->with('error', $alasan);
+            }
 
-        Tagihan::factory()->create([
-            'id_pelanggan' => $pelanggan->id_pelanggan,
-            'bulan' => 7,
-            'tahun' => 2025
-        ]);
+            if ($tagihan->pembayarans()->exists()) {
+                return back()->with('error', 'Tagihan ini punya riwayat pembayaran (termasuk yang dibatalkan), jadi tidak bisa dihapus.');
+            }
 
-        $data = [
-            'id_pelanggan' => $pelanggan->id_pelanggan,
-            'bulan' => 7,
-            'tahun' => 2025,
-            'jumlah_meter' => 150,
-            'status' => 'belum_lunas'
-        ];
+            $tagihan->delete();
 
-        $response = $this->post(route('tagihan.store'), $data);
-
-        $response->assertSessionHasErrors(['error']);
+            return redirect()->route('tagihan.index')
+                ->with('success', 'Tagihan berhasil dihapus');
+        });
     }
 
-    public function test_show_tagihan_detail()
+    /**
+     * Mengembalikan alasan bila tagihan tidak boleh diubah/dihapus dari menu Tagihan.
+     */
+    private function alasanTerkunci(Tagihan $tagihan): ?string
     {
-        $this->actingAsAdmin();
+        if ($tagihan->isLunas()) {
+            return 'Tagihan yang sudah lunas dikunci. Batalkan pembayarannya lebih dulu bila ada kesalahan.';
+        }
 
-        $tagihan = Tagihan::factory()->create();
+        if (! $tagihan->isManual()) {
+            return 'Tagihan ini dibuat dari data penggunaan. Ubah atau hapus lewat menu Penggunaan.';
+        }
 
-        $response = $this->get(route('tagihan.show', $tagihan->id_tagihan));
-
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.tagihan.show');
-    }
-
-    public function test_edit_form_loads_correctly()
-    {
-        $this->actingAsAdmin();
-
-        $tagihan = Tagihan::factory()->create();
-
-        $response = $this->get(route('tagihan.edit', $tagihan->id_tagihan));
-
-        $response->assertStatus(200);
-        $response->assertViewIs('admin.tagihan.edit');
-    }
-
-    public function test_update_tagihan()
-    {
-        $this->actingAsAdmin();
-
-        $tagihan = Tagihan::factory()->create([
-            'status' => 'belum_lunas',
-            'jumlah_meter' => 100
-        ]);
-
-        $response = $this->put(route('tagihan.update', $tagihan->id_tagihan), [
-            'status' => 'lunas',
-            'jumlah_meter' => 150
-        ]);
-
-        $response->assertRedirect(route('tagihan.index'));
-
-        $this->assertDatabaseHas('tagihans', [
-            'id_tagihan' => $tagihan->id_tagihan,
-            'status' => 'lunas',
-            'jumlah_meter' => 150
-        ]);
-    }
-
-    public function test_destroy_tagihan()
-    {
-        $this->actingAsAdmin();
-
-        $tagihan = Tagihan::factory()->create();
-
-        $response = $this->delete(route('tagihan.destroy', $tagihan->id_tagihan));
-
-        $response->assertRedirect(route('tagihan.index'));
-
-        $this->assertDatabaseMissing('tagihans', [
-            'id_tagihan' => $tagihan->id_tagihan
-        ]);
+        return null;
     }
 }

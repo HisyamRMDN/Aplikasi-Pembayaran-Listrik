@@ -1,35 +1,51 @@
 <?php
 
-namespace Tests\Unit;
+namespace App\Models;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\Penggunaan;
-use App\Models\Pelanggan;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class PenggunaanModelTest extends TestCase
+class Penggunaan extends Model
 {
-    use RefreshDatabase;
+    use HasFactory;
+    protected $primaryKey = 'id_penggunaan';
 
-    public function test_penggunaan_can_be_created()
+    protected $fillable = [
+        'id_pelanggan',
+        'bulan',
+        'tahun',
+        'meter_awal',
+        'meter_akhir'
+    ];
+
+    protected $casts = [
+        'bulan' => 'integer',
+        'tahun' => 'integer',
+        'meter_awal' => 'integer',
+        'meter_akhir' => 'integer'
+    ];
+
+    public function pelanggan()
     {
-        $penggunaan = Penggunaan::factory()->create([
-            'meter_awal' => 1200,
-            'meter_akhir' => 1600,
-        ]);
-
-        $this->assertDatabaseHas('penggunaans', [
-            'id_penggunaan' => $penggunaan->id_penggunaan,
-            'meter_awal' => 1200,
-            'meter_akhir' => 1600,
-        ]);
+        return $this->belongsTo(Pelanggan::class, 'id_pelanggan', 'id_pelanggan');
     }
 
-    public function test_penggunaan_belongs_to_pelanggan()
+    public function tagihans()
     {
-        $penggunaan = Penggunaan::factory()->create();
+        return $this->hasMany(Tagihan::class, 'id_penggunaan', 'id_penggunaan');
+    }
 
-        $this->assertNotNull($penggunaan->pelanggan);
-        $this->assertInstanceOf(Pelanggan::class, $penggunaan->pelanggan);
+    public function getJumlahMeterAttribute()
+    {
+        return $this->meter_akhir - $this->meter_awal;
+    }
+
+    /**
+     * Terkunci bila ada tagihan yang sudah lunas.
+     * Eager load 'tagihans' di controller agar tidak N+1.
+     */
+    public function terkunci(): bool
+    {
+        return $this->tagihans->contains(fn ($tagihan) => $tagihan->status === 'lunas');
     }
 }

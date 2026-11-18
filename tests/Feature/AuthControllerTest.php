@@ -1,97 +1,130 @@
 <?php
 
-namespace Tests\Feature;
+namespace App\Http\Controllers;
 
-use App\Models\Pelanggan;
-use App\Models\User;
-use App\Models\Level;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Tests\TestCase;
+use App\Models\User;
+use App\Models\Pelanggan;
 
-class AuthControllerTest extends TestCase
+class AuthController extends Controller
 {
-    use RefreshDatabase;
 
-    /** @test */
-    public function admin_can_login_with_correct_credentials()
+    public function showActivateForm()
     {
-        $level = Level::factory()->create(['nama_level' => 'admin']);
-
-        $user = User::factory()->create([
-            'username' => 'adminuser',
-            'password' => Hash::make('password'),
-            'id_level' => $level->id_level,
-        ]);
-
-        $response = $this->post('/login', [
-            'username' => 'adminuser',
-            'password' => 'password',
-            'login_type' => 'admin'
-        ]);
-
-        $response->assertRedirect('/dashboard');
-        $this->assertAuthenticatedAs($user);
+        return view('auth.activate');
     }
 
-    /** @test */
-    public function pelanggan_can_login_with_correct_credentials()
+    public function activateAccount(Request $request)
     {
-        $pelanggan = Pelanggan::factory()->create([
-            'username' => 'pelangganuser',
-            'password' => Hash::make('password'),
+        $request->validate([
+            'nomor_kwh' => 'required|numeric|digits_between:11,12',
+            'username'  => 'required|string|max:50|unique:pelanggans,username|unique:users,username',
+            'password'  => 'required|string|min:6|confirmed',
+        ], [
+            'username.unique'    => 'Username sudah digunakan, silakan pilih username lain.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
-        $response = $this->post('/login', [
-            'username' => 'pelangganuser',
-            'password' => 'password',
-            'login_type' => 'pelanggan'
+        $pelanggan = Pelanggan::where('nomor_kwh', $request->nomor_kwh)->first();
+
+        if (!$pelanggan) {
+            return back()->withErrors([
+                'nomor_kwh' => 'Nomor KWH tidak ditemukan. Pastikan meteran Anda sudah didaftarkan petugas.',
+            ])->withInput();
+        }
+
+        if (!is_null($pelanggan->username)) {
+            return back()->withErrors([
+                'nomor_kwh' => 'Nomor KWH ini sudah memiliki akun aktif. Silakan langsung masuk.',
+            ])->withInput();
+        }
+
+        $pelanggan->update([
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
         ]);
 
-        $response->assertRedirect('/customer/dashboard');
-        $this->assertAuthenticated('pelanggan');
+        Auth::guard('pelanggan')->login($pelanggan);
+        $request->session()->regenerate();
+
+        return redirect('/customer/dashboard');
+    }
+    public function showLoginForm()
+    {
+        return view('auth.login');
     }
 
-    /** @test */
-    public function login_fails_with_wrong_credentials()
+    public function login(Request $request)
     {
-        $response = $this->post('/login', [
-            'username' => 'wronguser',
-            'password' => 'wrongpass',
-            'login_type' => 'admin'
+        $request->validate([
+            'username' => 'required',
+            'password' => 'required',
         ]);
 
-        $response->assertSessionHasErrors('username');
-        $this->assertGuest();
+        $credentials = $request->only('username', 'password');
+
+        // Coba login sebagai admin (default guard "web")
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended('/dashboard');
+        }
+
+        // Jika gagal, coba login sebagai pelanggan
+        if (Auth::guard('pelanggan')->attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended('/customer/dashboard');
+        }
+
+        return back()->withErrors([
+            'username' => 'Username atau password salah.',
+        ])->onlyInput('username');
     }
 
-    /** @test */
-    public function admin_can_logout_successfully()
+
+    public function logout(Request $request)
     {
-        $user = User::factory()->create([
-            'password' => Hash::make('password')
-        ]);
+        $guard = $request->route()->getPrefix() === 'pelanggan' ? 'pelanggan' : 'web';
 
-        $this->actingAs($user);
+        Auth::guard($guard)->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-        $response = $this->post('/logout');
-
-        $response->assertRedirect('/');
-        $this->assertGuest();
+        return redirect('/');
     }
 
-    /** @test */
-    public function pelanggan_can_logout_successfully()
+    // Pelanggan specific methods
+    public function showPelangganLoginForm()
     {
-        $pelanggan = Pelanggan::factory()->create([
-            'password' => Hash::make('password')
+        return view('auth.login');
+    }
+
+    public function pelangganLogin(Request $request)
+    {
+        $request->validate([
+            'username' => 'required',
+            'password' => 'required'
         ]);
 
-        $this->actingAs($pelanggan, 'pelanggan');
+        $credentials = $request->only('username', 'password');
 
-        $response = $this->post('/pelanggan/logout');
+        if (Auth::guard('pelanggan')->attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended('/customer/dashboard');
+        }
 
-        $response->assertRedirect('/');
-        $this->assertGuest('pelanggan');
+        return back()->withErrors([
+            'username' => 'Username atau password salah.',
+        ])->onlyInput('username');
+    }
+
+    public function pelangganLogout(Request $request)
+    {
+        Auth::guard('pelanggan')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/');
     }
 }

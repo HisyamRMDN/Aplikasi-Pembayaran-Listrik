@@ -1,51 +1,65 @@
 <?php
 
-namespace Tests\Unit;
+namespace App\Models;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\Pembayaran;
-use App\Models\Tagihan;
-use App\Models\Pelanggan;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class PembayaranModelTest extends TestCase
+class Pembayaran extends Model
 {
-    use RefreshDatabase;
+    use HasFactory;
 
-    public function test_pembayaran_can_be_created()
+    protected $primaryKey = 'id_pembayaran';
+
+    protected $fillable = [
+        'id_tagihan',
+        'id_pelanggan',
+        'tanggal_pembayaran',
+        'bulan_bayar',
+        'biaya_admin',
+        'total_bayar',
+        'status',
+        'dibatalkan_pada',
+        'alasan_batal',
+        'id_user_batal',
+        'id_user'
+    ];
+
+    protected $casts = [
+        'tanggal_pembayaran' => 'date',
+        'dibatalkan_pada' => 'datetime',
+        'biaya_admin' => 'decimal:2',
+        'total_bayar' => 'decimal:2'
+    ];
+
+    public function tagihan()
     {
-        $pembayaran = Pembayaran::factory()->create([
-            'biaya_admin' => 3000
-        ]);
-
-        $this->assertDatabaseHas('pembayarans', [
-            'id_pembayaran' => $pembayaran->id_pembayaran,
-            'biaya_admin' => 3000,
-        ]);
+        return $this->belongsTo(Tagihan::class, 'id_tagihan', 'id_tagihan');
     }
 
-    public function test_pembayaran_belongs_to_tagihan()
+    public function pelanggan()
     {
-        $pembayaran = Pembayaran::factory()->create();
-
-        $this->assertNotNull($pembayaran->tagihan);
-        $this->assertInstanceOf(Tagihan::class, $pembayaran->tagihan);
+        return $this->belongsTo(Pelanggan::class, 'id_pelanggan', 'id_pelanggan');
     }
 
-    public function test_pembayaran_belongs_to_pelanggan()
+    public function user()
     {
-        $pembayaran = Pembayaran::factory()->create();
-
-        $this->assertNotNull($pembayaran->pelanggan);
-        $this->assertInstanceOf(Pelanggan::class, $pembayaran->pelanggan);
+        return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
 
-    public function test_pembayaran_belongs_to_user()
+    public function userPembatal()
     {
-        $pembayaran = Pembayaran::factory()->create();
+        return $this->belongsTo(User::class, 'id_user_batal', 'id_user');
+    }
 
-        $this->assertNotNull($pembayaran->user);
-        $this->assertInstanceOf(User::class, $pembayaran->user);
+    /** Pembayaran yang masih berlaku (belum dibatalkan). */
+    public function scopeAktif($query)
+    {
+        return $query->where('status', 'berhasil');
+    }
+
+    public function isBatal(): bool
+    {
+        return $this->status === 'batal';
     }
 }

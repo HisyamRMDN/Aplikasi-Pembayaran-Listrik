@@ -53,8 +53,8 @@ class User extends Authenticatable
         return $this->belongsTo(Level::class, 'id_level', 'id_level');
     }
 
-    public function pembayarans()
+    public function isAdministrator(): bool
     {
-        return $this->hasMany(Pembayaran::class, 'id_user', 'id_user');
+        return strtolower($this->level?->nama_level ?? '') === 'administrator';
     }
 }

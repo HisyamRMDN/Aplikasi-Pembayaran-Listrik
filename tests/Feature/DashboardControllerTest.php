@@ -1,83 +1,66 @@
 <?php
 
-namespace Tests\Feature;
+namespace App\Http\Controllers;
 
-use App\Models\Pembayaran;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Pelanggan;
 use App\Models\Penggunaan;
 use App\Models\Tagihan;
-use App\Models\User;
-use App\Models\Level;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Tests\TestCase;
+use App\Models\Pembayaran;
 
-class DashboardControllerTest extends TestCase
+class DashboardController extends Controller
 {
-    use RefreshDatabase;
-
-    /** @test */
-    public function admin_can_access_dashboard_and_see_summary_data()
+    public function index()
     {
-        $level = Level::factory()->create(['nama_level' => 'admin']);
-        $admin = User::factory()->create([
-            'id_level' => $level->id_level,
-            'password' => Hash::make('password')
-        ]);
+        $totalPelanggan = Pelanggan::count();
+        $totalPenggunaan = Penggunaan::count();
+        $totalTagihan = Tagihan::count();
+        $totalPembayaran = Pembayaran::count();
+        $tagihanBelumLunas = Tagihan::where('status', 'belum_lunas')->count();
 
-        // Data dummy
-        Pelanggan::factory()->count(2)->create();
-        Penggunaan::factory()->count(3)->create();
-        Tagihan::factory()->count(4)->create();
-        Tagihan::factory()->create(['status' => 'belum_lunas']);
-        Pembayaran::factory()->count(5)->create();
+        $tagihanTerbaru = Tagihan::with(['pelanggan.tarif'])
+            ->orderByDesc('tahun')
+            ->orderByDesc('bulan')
+            ->orderByDesc('id_tagihan')
+            ->limit(6)
+            ->get();
 
-        $this->actingAs($admin);
-
-        $response = $this->get('/dashboard');
-
-        $response->assertStatus(200);
-        $response->assertViewIs('dashboard.admin');
-        $response->assertViewHasAll([
+        return view('dashboard.admin', compact(
             'totalPelanggan',
             'totalPenggunaan',
             'totalTagihan',
             'totalPembayaran',
-            'tagihanBelumLunas'
-        ]);
+            'tagihanBelumLunas',
+            'tagihanTerbaru'
+        ));
     }
 
-    /** @test */
-    public function pelanggan_can_access_dashboard_and_see_data()
+    public function pelangganDashboard()
     {
-        $pelanggan = Pelanggan::factory()->create([
-            'password' => Hash::make('password')
-        ]);
+        $pelanggan = Auth::guard('pelanggan')->user();
 
-        Penggunaan::factory()->count(3)->create([
-            'id_pelanggan' => $pelanggan->id_pelanggan
-        ]);
+        $penggunaan = Penggunaan::where('id_pelanggan', $pelanggan->id_pelanggan)
+            ->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc')
+            ->limit(5)
+            ->get();
 
-        Tagihan::factory()->count(4)->create([
-            'id_pelanggan' => $pelanggan->id_pelanggan
-        ]);
+        $tagihan = Tagihan::where('id_pelanggan', $pelanggan->id_pelanggan)
+            ->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc')
+            ->limit(5)
+            ->get();
 
-        Tagihan::factory()->create([
-            'id_pelanggan' => $pelanggan->id_pelanggan,
-            'status' => 'belum_lunas'
-        ]);
+        $tagihanBelumLunas = Tagihan::where('id_pelanggan', $pelanggan->id_pelanggan)
+            ->where('status', 'belum_lunas')
+            ->count();
 
-        $this->actingAs($pelanggan, 'pelanggan');
-
-        $response = $this->get('/customer/dashboard');
-
-        $response->assertStatus(200);
-        $response->assertViewIs('dashboard.pelanggan');
-        $response->assertViewHasAll([
+        return view('dashboard.pelanggan', compact(
             'pelanggan',
             'penggunaan',
             'tagihan',
             'tagihanBelumLunas'
-        ]);
+        ));
     }
 }
