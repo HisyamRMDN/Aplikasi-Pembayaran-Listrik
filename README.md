@@ -1,3 +1,5 @@
+![VOLTPAY Test Suite](https://github.com/HisyamRMDN/https://github.com/HisyamRMDN/HSYM-Portfolio.git/actions/workflows/tests.yml/badge.svg)
+
 # Sistem Pengelolaan Token Listrik
 
 Aplikasi web untuk pengelolaan sistem token listrik yang dibangun menggunakan Laravel 12. Sistem ini memungkinkan pengelolaan pelanggan, pencatatan penggunaan listrik, pembuat tagihan, dan proses pembayaran.
@@ -6,36 +8,36 @@ Aplikasi web untuk pengelolaan sistem token listrik yang dibangun menggunakan La
 
 ### Untuk Admin
 
--   **Dashboard Admin** - Overview statistik sistem
--   **Manajemen Pelanggan** - CRUD data pelanggan
--   **Manajemen Penggunaan** - Pencatatan meter listrik
--   **Manajemen Tagihan** - Pembuatan dan pengelolaan tagihan
--   **Manajemen Pembayaran** - Proses pembayaran tagihan
--   **Laporan** - Berbagai laporan sistem
+- **Dashboard Admin** - Overview statistik sistem
+- **Manajemen Pelanggan** - CRUD data pelanggan
+- **Manajemen Penggunaan** - Pencatatan meter listrik
+- **Manajemen Tagihan** - Pembuatan dan pengelolaan tagihan
+- **Manajemen Pembayaran** - Proses pembayaran tagihan
+- **Laporan** - Berbagai laporan sistem
 
 ### Untuk Pelanggan
 
--   **Dashboard Pelanggan** - Informasi akun dan ringkasan
--   **Riwayat Penggunaan** - Melihat history penggunaan listrik
--   **Tagihan** - Melihat tagihan dan status pembayaran
--   **Profil** - Informasi data pelanggan
+- **Dashboard Pelanggan** - Informasi akun dan ringkasan
+- **Riwayat Penggunaan** - Melihat history penggunaan listrik
+- **Tagihan** - Melihat tagihan dan status pembayaran
+- **Profil** - Informasi data pelanggan
 
 ## 🛠️ Teknologi yang Digunakan
 
--   **Backend**: Laravel 11
--   **Frontend**: Blade Templates, Tailwind CSS
--   **Database**: MySQL
--   **Authentication**: Laravel Multi-Guard (Admin & Pelanggan)
--   **Build Tools**: Vite
--   **Package Manager**: Composer, NPM
+- **Backend**: Laravel 11
+- **Frontend**: Blade Templates, Tailwind CSS
+- **Database**: MySQL
+- **Authentication**: Laravel Multi-Guard (Admin & Pelanggan)
+- **Build Tools**: Vite
+- **Package Manager**: Composer, NPM
 
 ## 📋 Persyaratan Sistem
 
--   PHP >= 8.2
--   Composer
--   Node.js & NPM
--   MySQL >= 8.0
--   Web Server (Apache/Nginx)
+- PHP >= 8.2
+- Composer
+- Node.js & NPM
+- MySQL >= 8.0
+- Web Server (Apache/Nginx)
 
 ## 🔧 Instalasi
 
@@ -121,10 +123,10 @@ Aplikasi akan berjalan di `http://localhost:8000`
 
 ### Relasi Database
 
--   Pelanggan memiliki tarif (Many to One)
--   Pelanggan memiliki banyak penggunaan (One to Many)
--   Pelanggan memiliki banyak tagihan (One to Many)
--   Tagihan memiliki banyak pembayaran (One to Many)
+- Pelanggan memiliki tarif (Many to One)
+- Pelanggan memiliki banyak penggunaan (One to Many)
+- Pelanggan memiliki banyak tagihan (One to Many)
+- Tagihan memiliki banyak pembayaran (One to Many)
 
 ## 👥 Akun Default
 
@@ -132,13 +134,13 @@ Setelah menjalankan seeder, tersedia akun default:
 
 ### Admin
 
--   **Username**: admin
--   **Password**: password
+- **Username**: admin
+- **Password**: password
 
 ### Pelanggan (contoh)
 
--   **Username**: pelanggan1
--   **Password**: password
+- **Username**: pelanggan1
+- **Password**: password
 
 ## 🎯 Penggunaan
 
@@ -183,44 +185,44 @@ tokenlistrikserkom/
 
 Aplikasi menggunakan Laravel Multi-Guard Authentication:
 
--   **web** guard untuk admin
--   **pelanggan** guard untuk pelanggan
+- **web** guard untuk admin
+- **pelanggan** guard untuk pelanggan
 
 ### Middleware
 
--   `auth` - Proteksi route admin
--   `auth:pelanggan` - Proteksi route pelanggan
+- `auth` - Proteksi route admin
+- `auth:pelanggan` - Proteksi route pelanggan
 
 ## 🎨 UI/UX
 
--   **Design System**: Tailwind CSS
--   **Icons**: Heroicons
--   **Responsive**: Mobile-first approach
--   **Theme**: Modern dan clean interface
+- **Design System**: Tailwind CSS
+- **Icons**: Heroicons
+- **Responsive**: Mobile-first approach
+- **Theme**: Modern dan clean interface
 
 ## 🚦 Status Pembayaran
 
 Sistem mendukung status tagihan:
 
--   **Belum Lunas** - Tagihan yang belum dibayar
--   **Lunas** - Tagihan yang sudah dibayar
+- **Belum Lunas** - Tagihan yang belum dibayar
+- **Lunas** - Tagihan yang sudah dibayar
 
 ## 📊 Laporan dan Dashboard
 
 ### Dashboard Admin
 
--   Total pelanggan
--   Total penggunaan
--   Total tagihan
--   Total pembayaran
--   Tagihan belum lunas
+- Total pelanggan
+- Total penggunaan
+- Total tagihan
+- Total pembayaran
+- Tagihan belum lunas
 
 ### Dashboard Pelanggan
 
--   Informasi akun
--   Alert tagihan belum lunas
--   Riwayat penggunaan terbaru
--   Tagihan terbaru
+- Informasi akun
+- Alert tagihan belum lunas
+- Riwayat penggunaan terbaru
+- Tagihan terbaru
 
 ## 🔧 Konfigurasi Tambahan
 
@@ -285,16 +287,16 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📞 Kontak
 
--   **Developer**: [Nama Developer]
--   **Email**: [email@example.com]
--   **Project Link**: [repository-url]
+- **Developer**: [Nama Developer]
+- **Email**: [email@example.com]
+- **Project Link**: [repository-url]
 
 ## 🙏 Acknowledgments
 
--   Laravel Framework
--   Tailwind CSS
--   Heroicons
--   Community Laravel Indonesia
+- Laravel Framework
+- Tailwind CSS
+- Heroicons
+- Community Laravel Indonesia
 
 ---
 

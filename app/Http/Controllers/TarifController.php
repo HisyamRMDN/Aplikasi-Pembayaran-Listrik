@@ -100,4 +100,12 @@ class TarifController extends Controller
         return redirect()->route('tarif.index')
             ->with('success', 'Golongan tarif berhasil dihapus');
     }
+
+        public function pelangganIndex()
+    {
+        $pelanggan = Auth::guard('pelanggan')->user();
+        $tarifs = Tarif::orderBy('daya')->get();
+
+        return view('pelanggan.tarif', compact('tarifs', 'pelanggan'));
+    }
 }

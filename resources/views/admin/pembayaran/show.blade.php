@@ -182,6 +182,15 @@
                             </span>
                         </div>
 
+                        @if (($pembayaran->tagihan->denda ?? 0) > 0)
+                            <div class="flex justify-between text-xs">
+                                <span class="text-zinc-500">Denda Keterlambatan</span>
+                                <span class="font-medium text-zinc-900 tabular-nums">
+                                    Rp {{ number_format($pembayaran->tagihan->denda, 0, ',', '.') }}
+                                </span>
+                            </div>
+                        @endif
+
                         <div class="flex justify-between">
                             <span class="text-zinc-500">Biaya Admin</span>
                             <span class="font-medium text-zinc-900 tabular-nums">

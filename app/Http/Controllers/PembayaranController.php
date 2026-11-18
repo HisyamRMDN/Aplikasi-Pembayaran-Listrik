@@ -38,12 +38,17 @@ class PembayaranController extends Controller
         return view('admin.pembayaran.index', compact('pembayarans', 'jumlahPembayaranHariIni', 'totalNominalHariIni'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $tagihans = Tagihan::with('pelanggan')
+        $tagihans = Tagihan::with('pelanggan.tarif')
             ->where('status', 'belum_lunas')
+            ->orderBy('tahun')
+            ->orderBy('bulan')
             ->get();
-        return view('admin.pembayaran.create', compact('tagihans'));
+
+        $selectedTagihanId = $request->query('id_tagihan');
+
+        return view('admin.pembayaran.create', compact('tagihans', 'selectedTagihanId'));
     }
 
     public function store(Request $request)
@@ -56,16 +61,18 @@ class PembayaranController extends Controller
 
         return DB::transaction(function () use ($request) {
             // Kunci baris tagihan agar dua petugas tidak melunasi tagihan yang sama bersamaan.
-            $tagihan = Tagihan::where('id_tagihan', $request->id_tagihan)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $tagihan = Tagihan::where('id_tagihan', $request->id_tagihan)->lockForUpdate()->firstOrFail();
 
             if ($tagihan->isLunas()) {
-                return back()->withInput()->withErrors(['error' => 'Tagihan ini sudah lunas.']);
+                return back()
+                    ->withInput()
+                    ->withErrors(['error' => 'Tagihan ini sudah lunas.']);
             }
 
             // total_tagihan adalah snapshot, tidak terpengaruh perubahan tarif.
-            $totalBayar = $tagihan->total_tagihan + $request->biaya_admin;
+            $tanggalBayar = Carbon::parse($request->tanggal_pembayaran);
+            $denda = $tagihan->estimasiDenda($tanggalBayar);
+            $totalBayar = $tagihan->total_tagihan + $denda + $request->biaya_admin;
 
             Pembayaran::create([
                 'id_tagihan' => $tagihan->id_tagihan,
@@ -75,20 +82,15 @@ class PembayaranController extends Controller
                 'biaya_admin' => $request->biaya_admin,
                 'total_bayar' => $totalBayar,
                 'status' => 'berhasil',
-                'id_user' => Auth::id()
+                'id_user' => Auth::id(),
             ]);
 
-            $tanggalBayar = Carbon::parse($request->tanggal_pembayaran);
-            $denda = $tagihan->estimasiDenda($tanggalBayar);
-            $totalBayar = $tagihan->total_tagihan + $denda + $request->biaya_admin;
-
             $tagihan->update([
-            'status' => 'lunas',
-            'denda' => $denda,
-        ]);
+                'status' => 'lunas',
+                'denda' => $denda,
+            ]);
 
-            return redirect()->route('pembayaran.index')
-                ->with('success', 'Pembayaran berhasil diproses');
+            return redirect()->route('pembayaran.index')->with('success', 'Pembayaran berhasil diproses');
         });
     }
 
@@ -103,7 +105,8 @@ class PembayaranController extends Controller
         $pembayaran = Pembayaran::with('tagihan', 'pelanggan')->findOrFail($id);
 
         if ($pembayaran->isBatal()) {
-            return redirect()->route('pembayaran.show', $pembayaran->id_pembayaran)
+            return redirect()
+                ->route('pembayaran.show', $pembayaran->id_pembayaran)
                 ->with('error', 'Pembayaran yang sudah dibatalkan tidak bisa diubah.');
         }
 
@@ -121,24 +124,25 @@ class PembayaranController extends Controller
             $pembayaran = Pembayaran::lockForUpdate()->findOrFail($id);
 
             if ($pembayaran->isBatal()) {
-                return redirect()->route('pembayaran.show', $pembayaran->id_pembayaran)
+                return redirect()
+                    ->route('pembayaran.show', $pembayaran->id_pembayaran)
                     ->with('error', 'Pembayaran yang sudah dibatalkan tidak bisa diubah.');
             }
 
+            // Di dalam PembayaranController@store:
             $tanggalBayar = Carbon::parse($request->tanggal_pembayaran);
-            $denda = $pembayaran->tagihan->estimasiDenda($tanggalBayar);
-            $totalBayar = $pembayaran->tagihan->total_tagihan + $denda + $request->biaya_admin;
+            $denda = $tagihan->estimasiDenda($tanggalBayar);
+            $totalBayar = $tagihan->total_tagihan + $denda + $request->biaya_admin;
 
             $pembayaran->update([
                 'tanggal_pembayaran' => $request->tanggal_pembayaran,
                 'biaya_admin' => $request->biaya_admin,
-                'total_bayar' => $totalBayar
+                'total_bayar' => $totalBayar,
             ]);
 
             $pembayaran->tagihan->update(['denda' => $denda]);
 
-            return redirect()->route('pembayaran.index')
-                ->with('success', 'Data pembayaran berhasil diperbarui');
+            return redirect()->route('pembayaran.index')->with('success', 'Data pembayaran berhasil diperbarui');
         });
     }
 
@@ -173,7 +177,8 @@ class PembayaranController extends Controller
                 'denda' => 0,
             ]);
 
-            return redirect()->route('pembayaran.index')
+            return redirect()
+                ->route('pembayaran.index')
                 ->with('success', 'Pembayaran dibatalkan. Tagihan kembali berstatus belum lunas.');
         });
     }
@@ -205,7 +210,7 @@ class PembayaranController extends Controller
             9 => 'September',
             10 => 'Oktober',
             11 => 'November',
-            12 => 'Desember'
+            12 => 'Desember',
         ];
 
         return $namaBulan[$bulan] ?? 'Tidak Diketahui';
