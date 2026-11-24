@@ -1,11 +1,5 @@
 # VOLTPAY — Aplikasi Pembayaran Listrik Pascabayar
 
-<div align="center">
-  <a href="" target="_blank">
-    <img src="public/image/mock-up.png" alt="Tampilan HSYM Portfolio" width="100%" />
-  </a>
-</div>
-
 **VOLTPAY** adalah aplikasi manajemen tagihan dan pembayaran listrik pascabayar berbasis **Laravel 12** dan **MySQL** dengan antarmuka monokromatik modern. Aplikasi ini mendukung pencatatan penggunaan meteran bulanan, kalkulasi tarif & denda keterlambatan otomatis, pembayaran melalui loket kasir maupun pembayaran mandiri pelanggan secara _real-time_ menggunakan **Midtrans Snap Sandbox**.
 
 ---
