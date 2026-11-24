@@ -1,303 +1,134 @@
-![VOLTPAY Test Suite](https://github.com/HisyamRMDN/https://github.com/HisyamRMDN/HSYM-Portfolio.git/actions/workflows/tests.yml/badge.svg)
-
-# Sistem Pengelolaan Token Listrik
-
-Aplikasi web untuk pengelolaan sistem token listrik yang dibangun menggunakan Laravel 12. Sistem ini memungkinkan pengelolaan pelanggan, pencatatan penggunaan listrik, pembuat tagihan, dan proses pembayaran.
-
-## 🚀 Fitur Utama
-
-### Untuk Admin
-
-- **Dashboard Admin** - Overview statistik sistem
-- **Manajemen Pelanggan** - CRUD data pelanggan
-- **Manajemen Penggunaan** - Pencatatan meter listrik
-- **Manajemen Tagihan** - Pembuatan dan pengelolaan tagihan
-- **Manajemen Pembayaran** - Proses pembayaran tagihan
-- **Laporan** - Berbagai laporan sistem
-
-### Untuk Pelanggan
-
-- **Dashboard Pelanggan** - Informasi akun dan ringkasan
-- **Riwayat Penggunaan** - Melihat history penggunaan listrik
-- **Tagihan** - Melihat tagihan dan status pembayaran
-- **Profil** - Informasi data pelanggan
-
-## 🛠️ Teknologi yang Digunakan
-
-- **Backend**: Laravel 11
-- **Frontend**: Blade Templates, Tailwind CSS
-- **Database**: MySQL
-- **Authentication**: Laravel Multi-Guard (Admin & Pelanggan)
-- **Build Tools**: Vite
-- **Package Manager**: Composer, NPM
-
-## 📋 Persyaratan Sistem
-
-- PHP >= 8.2
-- Composer
-- Node.js & NPM
-- MySQL >= 8.0
-- Web Server (Apache/Nginx)
-
-## 🔧 Instalasi
-
-### 1. Clone Repository
-
-```bash
-git clone <repository-url>
-cd tokenlistrikserkom
-```
-
-### 2. Install Dependencies
-
-```bash
-# Install PHP dependencies
-composer install
-
-# Install Node dependencies
-npm install
-```
-
-### 3. Konfigurasi Environment
-
-```bash
-# Copy file environment
-cp .env.example .env
-
-# Generate application key
-php artisan key:generate
-```
-
-### 4. Konfigurasi Database
-
-Edit file `.env` dan sesuaikan konfigurasi database:
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=token_listrik
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-```
-
-### 5. Migrasi dan Seeding Database
-
-```bash
-# Jalankan migrasi
-php artisan migrate
-
-# Jalankan seeder untuk data awal
-php artisan db:seed
-```
-
-### 6. Build Assets
-
-```bash
-# Development
-npm run dev
-
-# Production
-npm run build
-```
-
-### 7. Jalankan Server
-
-```bash
-php artisan serve
-```
-
-Aplikasi akan berjalan di `http://localhost:8000`
-
-## 🗄️ Struktur Database
-
-### Tabel Utama
-
-1. **users** - Data admin sistem
-2. **levels** - Level akses pengguna
-3. **tarifs** - Tarif listrik berdasarkan daya
-4. **pelanggans** - Data pelanggan
-5. **penggunaans** - Record penggunaan listrik
-6. **tagihans** - Data tagihan pelanggan
-7. **pembayarans** - Record pembayaran
-
-### Relasi Database
-
-- Pelanggan memiliki tarif (Many to One)
-- Pelanggan memiliki banyak penggunaan (One to Many)
-- Pelanggan memiliki banyak tagihan (One to Many)
-- Tagihan memiliki banyak pembayaran (One to Many)
-
-## 👥 Akun Default
-
-Setelah menjalankan seeder, tersedia akun default:
-
-### Admin
-
-- **Username**: admin
-- **Password**: password
-
-### Pelanggan (contoh)
-
-- **Username**: pelanggan1
-- **Password**: password
-
-## 🎯 Penggunaan
-
-### Login Admin
-
-1. Akses `/` atau `/admin/login`
-2. Masukkan kredensial admin
-3. Kelola sistem melalui dashboard admin
-
-### Login Pelanggan
-
-1. Akses `/pelanggan/login`
-2. Masukkan kredensial pelanggan
-3. Lihat tagihan dan riwayat penggunaan
-
-## 📁 Struktur Proyek
-
-```
-tokenlistrikserkom/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/     # Controllers aplikasi
-│   │   └── Middleware/      # Custom middleware
-│   └── Models/              # Eloquent models
-├── database/
-│   ├── migrations/          # Database migrations
-│   └── seeders/             # Database seeders
-├── resources/
-│   ├── views/               # Blade templates
-│   │   ├── admin/           # Views untuk admin
-│   │   ├── pelanggan/       # Views untuk pelanggan
-│   │   ├── auth/            # Views autentikasi
-│   │   └── layouts/         # Layout templates
-│   ├── css/                 # CSS files
-│   └── js/                  # JavaScript files
-├── routes/
-│   └── web.php              # Route definitions
-└── public/                  # Public assets
-```
-
-## 🔐 Sistem Autentikasi
-
-Aplikasi menggunakan Laravel Multi-Guard Authentication:
-
-- **web** guard untuk admin
-- **pelanggan** guard untuk pelanggan
-
-### Middleware
-
-- `auth` - Proteksi route admin
-- `auth:pelanggan` - Proteksi route pelanggan
-
-## 🎨 UI/UX
-
-- **Design System**: Tailwind CSS
-- **Icons**: Heroicons
-- **Responsive**: Mobile-first approach
-- **Theme**: Modern dan clean interface
-
-## 🚦 Status Pembayaran
-
-Sistem mendukung status tagihan:
-
-- **Belum Lunas** - Tagihan yang belum dibayar
-- **Lunas** - Tagihan yang sudah dibayar
-
-## 📊 Laporan dan Dashboard
-
-### Dashboard Admin
-
-- Total pelanggan
-- Total penggunaan
-- Total tagihan
-- Total pembayaran
-- Tagihan belum lunas
-
-### Dashboard Pelanggan
-
-- Informasi akun
-- Alert tagihan belum lunas
-- Riwayat penggunaan terbaru
-- Tagihan terbaru
-
-## 🔧 Konfigurasi Tambahan
-
-### Mail Configuration
-
-Untuk fitur email (jika diperlukan):
-
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=your-smtp-host
-MAIL_PORT=587
-MAIL_USERNAME=your-email
-MAIL_PASSWORD=your-password
-MAIL_ENCRYPTION=tls
-```
-
-### Cache Configuration
-
-```bash
-# Cache config
-php artisan config:cache
-
-# Cache routes
-php artisan route:cache
-
-# Cache views
-php artisan view:cache
-```
-
-## 🐛 Troubleshooting
-
-### Masalah Umum
-
-1. **Error 500**: Pastikan semua dependency terinstall dan konfigurasi database benar
-2. **Assets tidak muncul**: Jalankan `npm run build`
-3. **Login gagal**: Pastikan seeder sudah dijalankan
-4. **Database error**: Periksa konfigurasi database di `.env`
-
-### Logs
-
-```bash
-# Lihat log aplikasi
-tail -f storage/logs/laravel.log
-
-# Clear cache
-php artisan cache:clear
-php artisan config:clear
-php artisan view:clear
-```
-
-## 🤝 Kontribusi
-
-1. Fork repository
-2. Buat feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
-4. Push ke branch (`git push origin feature/AmazingFeature`)
-5. Buat Pull Request
-
-## 📝 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-## 📞 Kontak
-
-- **Developer**: [Nama Developer]
-- **Email**: [email@example.com]
-- **Project Link**: [repository-url]
-
-## 🙏 Acknowledgments
-
-- Laravel Framework
-- Tailwind CSS
-- Heroicons
-- Community Laravel Indonesia
+# VOLTPAY — Aplikasi Pembayaran Listrik Pascabayar
+
+<div align="center">
+  <a href="" target="_blank">
+    <img src="public/image/mock-up.png" alt="Tampilan HSYM Portfolio" width="100%" />
+  </a>
+</div>
+
+**VOLTPAY** adalah aplikasi manajemen tagihan dan pembayaran listrik pascabayar berbasis **Laravel 12** dan **MySQL** dengan antarmuka monokromatik modern. Aplikasi ini mendukung pencatatan penggunaan meteran bulanan, kalkulasi tarif & denda keterlambatan otomatis, pembayaran melalui loket kasir maupun pembayaran mandiri pelanggan secara _real-time_ menggunakan **Midtrans Snap Sandbox**.
 
 ---
 
-**Catatan**: Pastikan untuk mengubah kredensial default setelah instalasi untuk keamanan yang lebih baik.
+## Fitur Utama
+
+### 1. Portal Administrator & Petugas Loket
+
+- **Manajemen Master Data**: Pengelolaan data pelanggan (nomor kWh, daya, alamat), kategori tarif listrik per kWh, dan akun petugas/kasir dengan kontrol akses berbasis peran (_Role-Based Access Control_).
+- **Pencatatan Penggunaan Meter**: Validasi otomatis agar meter awal tidak lebih kecil dari meter akhir bulan sebelumnya, serta pembuatan tagihan bulanan secara otomatis.
+- **Loket Pembayaran Tunai**: Pemrosesan pembayaran langsung di loket lengkap dengan pencatatan biaya admin dan cetak bukti pembayaran.
+- **Laporan & Rekapitulasi**: Ringkasan pendapatan bulanan, filter transaksi berdasarkan kanal pembayaran (Loket Tunai vs Midtrans Online), pembatalan transaksi (khusus Administrator), serta ekspor laporan ke format **CSV**.
+
+### 2. Portal Pelanggan
+
+- **Dashboard & Riwayat Penggunaan**: Pemantauan pemakaian listrik (kWh) bulanan dan rincian tagihan aktif.
+- **Pembayaran Online via Midtrans Snap**: Pelunasan tagihan mandiri menggunakan Virtual Account (BCA, BNI, BRI, Mandiri, Permata), GoPay, dan QRIS.
+- **Cetak Struk Digital**: Bukti pelunasan resmi untuk transaksi tunai maupun pembayaran online (`id_user = null`).
+- **Keamanan Akun**: Aktivasi mandiri akun pelanggan dan pembaruan profil/kata sandi dengan proteksi _rate limiter_.
+
+### 3. Keandalan & Keamanan Integrasi Midtrans
+
+- **Reuse Snap Token (Caching)**: Menyimpan `snap_token` aktif di cache berdasarkan ID tagihan dan total nominal untuk mencegah pembuatan `order_id` ganda saat popup ditutup dan dibuka ulang.
+- **Verifikasi Signature SHA-512**: Validasi keamanan notifikasi webhook `/webhooks/midtrans` menggunakan perbandingan _timing-attack safe_ (`hash_equals`).
+- **Atomic Locking & Idempotency**: Menggunakan `DB::transaction` dengan `lockForUpdate()` serta pengecekan `midtrans_order_id` untuk mencegah pencatatan pembayaran ganda (_race condition_).
+- **Penanganan Status Non-Settlement**: Menangani status `expire`, `cancel`, dan `deny` dengan membersihkan cache token agar pelanggan dapat membuat transaksi baru.
+
+---
+
+## Teknologi yang Digunakan
+
+- **Backend**: PHP 8.2+, Laravel 12
+- **Database**: MySQL 8.0 / MariaDB (SQLite untuk lingkungan _testing_)
+- **Frontend**: Blade Templates, Tailwind CSS, Vite
+- **Payment Gateway**: Midtrans Snap (`midtrans/midtrans-php`)
+- **Testing**: PHPUnit (Feature & Unit Tests)
+
+---
+
+## Instalasi & Menjalankan di Lokal
+
+### 1. Clone Repository & Instal Dependensi
+
+```bash
+git clone https://github.com/username/Aplikasi-Pembayaran-Listrik.git
+cd Aplikasi-Pembayaran-Listrik
+
+composer install
+npm install
+```
+
+### 2. Konfigurasi Environment
+
+Salin file `.env.example` menjadi `.env`, lalu buat _application key_:
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Sesuaikan pengaturan database dan kredensial **Midtrans Sandbox** di dalam file `.env`:
+
+```env
+APP_NAME=VOLTPAY
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=voltpay
+DB_USERNAME=root
+DB_PASSWORD=
+
+MIDTRANS_SERVER_KEY=your-sandbox-server-key
+MIDTRANS_SIGNATURE_KEY=your-sandbox-server-key
+MIDTRANS_CLIENT_KEY=your-sandbox-client-key
+MIDTRANS_IS_PRODUCTION=false
+MIDTRANS_IS_SANITIZED=true
+MIDTRANS_IS_3DS=true
+MIDTRANS_ADMIN_FEE=2500
+MIDTRANS_EXPIRY_MINUTES=60
+```
+
+### 3. Migrasi Database & Jalankan Server
+
+```bash
+php artisan migrate --seed
+npm run dev
+php artisan serve
+```
+
+---
+
+## Menguji Webhook Midtrans di Lokal
+
+Untuk menerima notifikasi pelunasan otomatis dari Midtrans Sandbox ke server lokal:
+
+1. Jalankan _tunneling_ HTTPS (misalnya menggunakan **Ngrok**):
+    ```bash
+    ngrok http 8000
+    ```
+2. Salin URL HTTPS yang dihasilkan (contoh: `https://xxxx.ngrok-free.app`).
+3. Masuk ke **Midtrans Sandbox Dashboard** $\rightarrow$ **Settings** $\rightarrow$ **Payment** $\rightarrow$ **Notification URL**, lalu isi dengan:
+    ```text
+    https://xxxx.ngrok-free.app/webhooks/midtrans
+    ```
+
+---
+
+## Pengujian Otomatis (Automated Testing)
+
+Proyek ini dilengkapi dengan 25 skenario pengujian otomatis (87 _assertions_) yang mencakup logika denda, otorisasi peran, alur portal pelanggan, _caching_ Snap Token, serta keamanan _webhook_ Midtrans.
+
+Jalankan seluruh pengujian dengan perintah:
+
+```bash
+php artisan test
+```
+
+---
+
+## Lisensi
+
+Proyek ini dikembangkan untuk kebutuhan pembelajaran dan portofolio pengembangan sistem pembayaran web.
