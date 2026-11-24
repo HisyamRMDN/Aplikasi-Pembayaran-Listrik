@@ -1,308 +1,51 @@
-
 <div align="center">
-  <a href="" target="_blank">
-    <img src="public/image/mock-up.png" alt="Tampilan HSYM Portfolio" width="100%" />
-  </a>
+  <img src="public/image/mock-up.png" alt="Tampilan VoltPay Portfolio" width="100%" />
+
+  # VOLTPAY — Sistem Pembayaran Listrik Pascabayar
+
+  [![Laravel Version](https://img.shields.io/badge/Laravel-12.x-red.svg)](https://laravel.com)
+  [![PHP Version](https://img.shields.io/badge/PHP-8.2%20%7C%208.3%20%7C%208.4-blue.svg)](https://php.net)
+  [![Midtrans](https://img.shields.io/badge/Payment-Midtrans%20Snap-blue)](https://midtrans.com)
+  [![Tests](https://img.shields.io/badge/Tests-Passed%20(25%20tests)-green.svg)](tests)
+
+  <p>Aplikasi web pengelolaan listrik pascabayar terintegrasi dengan gateway pembayaran online Midtrans Snap (Sandbox), manajemen pelanggan, pencatatan kWh, dan rekapitulasi laporan otomatis.</p>
 </div>
-
-# Sistem Pengelolaan Token Listrik
-
-Aplikasi web untuk pengelolaan sistem token listrik yang dibangun menggunakan Laravel 12. Sistem ini memungkinkan pengelolaan pelanggan, pencatatan penggunaan listrik, pembuat tagihan, dan proses pembayaran.
-
-## 🚀 Fitur Utama
-
-### Untuk Admin
-
-- **Dashboard Admin** - Overview statistik sistem
-- **Manajemen Pelanggan** - CRUD data pelanggan
-- **Manajemen Penggunaan** - Pencatatan meter listrik
-- **Manajemen Tagihan** - Pembuatan dan pengelolaan tagihan
-- **Manajemen Pembayaran** - Proses pembayaran tagihan
-- **Laporan** - Berbagai laporan sistem
-
-### Untuk Pelanggan
-
-- **Dashboard Pelanggan** - Informasi akun dan ringkasan
-- **Riwayat Penggunaan** - Melihat history penggunaan listrik
-- **Tagihan** - Melihat tagihan dan status pembayaran
-- **Profil** - Informasi data pelanggan
-
-## 🛠️ Teknologi yang Digunakan
-
-- **Backend**: Laravel 11
-- **Frontend**: Blade Templates, Tailwind CSS
-- **Database**: MySQL
-- **Authentication**: Laravel Multi-Guard (Admin & Pelanggan)
-- **Build Tools**: Vite
-- **Package Manager**: Composer, NPM
-
-## 📋 Persyaratan Sistem
-
-- PHP >= 8.2
-- Composer
-- Node.js & NPM
-- MySQL >= 8.0
-- Web Server (Apache/Nginx)
-
-## 🔧 Instalasi
-
-### 1. Clone Repository
-
-```bash
-git clone <repository-url>
-cd tokenlistrikserkom
-```
-
-### 2. Install Dependencies
-
-```bash
-# Install PHP dependencies
-composer install
-
-# Install Node dependencies
-npm install
-```
-
-### 3. Konfigurasi Environment
-
-```bash
-# Copy file environment
-cp .env.example .env
-
-# Generate application key
-php artisan key:generate
-```
-
-### 4. Konfigurasi Database
-
-Edit file `.env` dan sesuaikan konfigurasi database:
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=token_listrik
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-```
-
-### 5. Migrasi dan Seeding Database
-
-```bash
-# Jalankan migrasi
-php artisan migrate
-
-# Jalankan seeder untuk data awal
-php artisan db:seed
-```
-
-### 6. Build Assets
-
-```bash
-# Development
-npm run dev
-
-# Production
-npm run build
-```
-
-### 7. Jalankan Server
-
-```bash
-php artisan serve
-```
-
-Aplikasi akan berjalan di `http://localhost:8000`
-
-## 🗄️ Struktur Database
-
-### Tabel Utama
-
-1. **users** - Data admin sistem
-2. **levels** - Level akses pengguna
-3. **tarifs** - Tarif listrik berdasarkan daya
-4. **pelanggans** - Data pelanggan
-5. **penggunaans** - Record penggunaan listrik
-6. **tagihans** - Data tagihan pelanggan
-7. **pembayarans** - Record pembayaran
-
-### Relasi Database
-
-- Pelanggan memiliki tarif (Many to One)
-- Pelanggan memiliki banyak penggunaan (One to Many)
-- Pelanggan memiliki banyak tagihan (One to Many)
-- Tagihan memiliki banyak pembayaran (One to Many)
-
-## 👥 Akun Default
-
-Setelah menjalankan seeder, tersedia akun default:
-
-### Admin
-
-- **Username**: admin
-- **Password**: password
-
-### Pelanggan (contoh)
-
-- **Username**: pelanggan1
-- **Password**: password
-
-## 🎯 Penggunaan
-
-### Login Admin
-
-1. Akses `/` atau `/admin/login`
-2. Masukkan kredensial admin
-3. Kelola sistem melalui dashboard admin
-
-### Login Pelanggan
-
-1. Akses `/pelanggan/login`
-2. Masukkan kredensial pelanggan
-3. Lihat tagihan dan riwayat penggunaan
-
-## 📁 Struktur Proyek
-
-```
-tokenlistrikserkom/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/     # Controllers aplikasi
-│   │   └── Middleware/      # Custom middleware
-│   └── Models/              # Eloquent models
-├── database/
-│   ├── migrations/          # Database migrations
-│   └── seeders/             # Database seeders
-├── resources/
-│   ├── views/               # Blade templates
-│   │   ├── admin/           # Views untuk admin
-│   │   ├── pelanggan/       # Views untuk pelanggan
-│   │   ├── auth/            # Views autentikasi
-│   │   └── layouts/         # Layout templates
-│   ├── css/                 # CSS files
-│   └── js/                  # JavaScript files
-├── routes/
-│   └── web.php              # Route definitions
-└── public/                  # Public assets
-```
-
-## 🔐 Sistem Autentikasi
-
-Aplikasi menggunakan Laravel Multi-Guard Authentication:
-
-- **web** guard untuk admin
-- **pelanggan** guard untuk pelanggan
-
-### Middleware
-
-- `auth` - Proteksi route admin
-- `auth:pelanggan` - Proteksi route pelanggan
-
-## 🎨 UI/UX
-
-- **Design System**: Tailwind CSS
-- **Icons**: Heroicons
-- **Responsive**: Mobile-first approach
-- **Theme**: Modern dan clean interface
-
-## 🚦 Status Pembayaran
-
-Sistem mendukung status tagihan:
-
-- **Belum Lunas** - Tagihan yang belum dibayar
-- **Lunas** - Tagihan yang sudah dibayar
-
-## 📊 Laporan dan Dashboard
-
-### Dashboard Admin
-
-- Total pelanggan
-- Total penggunaan
-- Total tagihan
-- Total pembayaran
-- Tagihan belum lunas
-
-### Dashboard Pelanggan
-
-- Informasi akun
-- Alert tagihan belum lunas
-- Riwayat penggunaan terbaru
-- Tagihan terbaru
-
-## 🔧 Konfigurasi Tambahan
-
-### Mail Configuration
-
-Untuk fitur email (jika diperlukan):
-
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=your-smtp-host
-MAIL_PORT=587
-MAIL_USERNAME=your-email
-MAIL_PASSWORD=your-password
-MAIL_ENCRYPTION=tls
-```
-
-### Cache Configuration
-
-```bash
-# Cache config
-php artisan config:cache
-
-# Cache routes
-php artisan route:cache
-
-# Cache views
-php artisan view:cache
-```
-
-## 🐛 Troubleshooting
-
-### Masalah Umum
-
-1. **Error 500**: Pastikan semua dependency terinstall dan konfigurasi database benar
-2. **Assets tidak muncul**: Jalankan `npm run build`
-3. **Login gagal**: Pastikan seeder sudah dijalankan
-4. **Database error**: Periksa konfigurasi database di `.env`
-
-### Logs
-
-```bash
-# Lihat log aplikasi
-tail -f storage/logs/laravel.log
-
-# Clear cache
-php artisan cache:clear
-php artisan config:clear
-php artisan view:clear
-```
-
-## 🤝 Kontribusi
-
-1. Fork repository
-2. Buat feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
-4. Push ke branch (`git push origin feature/AmazingFeature`)
-5. Buat Pull Request
-
-## 📝 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-## 📞 Kontak
-
-- **Developer**: [Nama Developer]
-- **Email**: [email@example.com]
-- **Project Link**: [repository-url]
-
-## 🙏 Acknowledgments
-
-- Laravel Framework
-- Tailwind CSS
-- Heroicons
-- Community Laravel Indonesia
 
 ---
 
-**Catatan**: Pastikan untuk mengubah kredensial default setelah instalasi untuk keamanan yang lebih baik.
+## 🚀 Fitur Utama
+
+### Untuk Admin & Petugas
+- **Dashboard Admin:** Ringkasan statistik pendapatan bulanan, status tagihan, dan visualisasi data.
+- **Manajemen Pelanggan & Tarif:** Pengelolaan tarif per kWh, daya listrik, serta pendaftaran pelanggan.
+- **Pencatatan Meter Listrik:** Input meter awal dan akhir dengan validasi otomatis agar tidak kurang dari bulan sebelumnya.
+- **Pembuatan Tagihan Otomatis:** Perhitungan tagihan secara real-time berdasarkan pemakaian kWh dikalikan tarif golongan.
+- **Manajemen Pembayaran & Kasir:** Penerimaan pembayaran tunai di loket dengan cetak struk fisik/PDF.
+- **Laporan & Export:** Cetak laporan rekapitulasi bulanan dan ekspor data dalam format CSV.
+
+### Untuk Pelanggan (Portal Mandiri)
+- **Ringkasan Akun:** Informasi daya listrik, nomor KWH, dan tagihan berjalan.
+- **Riwayat Penggunaan & Tagihan:** Riwayat bulanan lengkap dengan status pelunasan.
+- **Pembayaran Online (Midtrans Snap):** Pembayaran mandiri via Virtual Account, QRIS, maupun E-Wallet langsung dari portal.
+- **Cetak Struk Mandiri:** Pelanggan bisa mengunduh atau mencetak struk pelunasan resmi secara online.
+
+---
+
+## 💳 Integrasi Midtrans Snap
+
+Aplikasi ini menggunakan **Midtrans Snap API** untuk metode pembayaran online mandiri:
+- **Reuse Snap Token:** Token Snap disimpan di Cache berdasarkan ID Tagihan dan nominal denda berjalan. Jika pengguna membuka modal pembayaran berulang kali, token yang sama digunakan kembali (mengurangi beban API).
+- **Biaya Admin Terpusat:** Diatur melalui `config('midtrans.admin_fee')` (default Rp 2.500).
+- **Penanganan Status Non-Settlement:** Webhook memproses status `settlement` dan `capture` (accept). Status `expire`, `cancel`, dan `deny` otomatis membersihkan cache token agar pelanggan bisa membuat token baru.
+- **Idempotency & DB Lock:** Menggunakan `lockForUpdate()` dalam transaksi database untuk mencegah pembayaran ganda.
+
+---
+
+## 🛠️ Cara Instalasi Lokal
+
+### 1. Clone Repository & Install Dependensi
+```bash
+git clone [https://github.com/HisyamRMDN/Aplikasi-Pembayaran-Listrik.git](https://github.com/HisyamRMDN/Aplikasi-Pembayaran-Listrik.git)
+cd Aplikasi-Pembayaran-Listrik
+composer install
+npm install && npm run build
