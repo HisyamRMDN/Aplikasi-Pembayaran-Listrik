@@ -2,7 +2,18 @@
 
 **VOLTPAY** adalah aplikasi manajemen tagihan dan pembayaran listrik pascabayar berbasis **Laravel 12** dan **MySQL** dengan antarmuka monokromatik modern. Aplikasi ini mendukung pencatatan penggunaan meteran bulanan, kalkulasi tarif & denda keterlambatan otomatis, pembayaran melalui loket kasir maupun pembayaran mandiri pelanggan secara _real-time_ menggunakan **Midtrans Snap Sandbox**.
 
----
+<div align="center">
+  <img src="public/image/mock-up.png" alt="Tampilan VoltPay Portfolio" width="100%" />
+
+# VOLTPAY — Sistem Pembayaran Listrik Pascabayar
+
+[![Laravel Version](https://img.shields.io/badge/Laravel-12.x-red.svg)](https://laravel.com)
+[![PHP Version](https://img.shields.io/badge/PHP-8.2%20%7C%208.3%20%7C%208.4-blue.svg)](https://php.net)
+[![Midtrans](https://img.shields.io/badge/Payment-Midtrans%20Snap-blue)](https://midtrans.com)
+[![Tests](<https://img.shields.io/badge/Tests-Passed%20(25%20tests)-green.svg>)](tests)
+
+  <p>Aplikasi web pengelolaan listrik pascabayar terintegrasi dengan gateway pembayaran online Midtrans Snap (Sandbox), manajemen pelanggan, pencatatan kWh, dan rekapitulasi laporan otomatis.</p>
+</div>
 
 ## Fitur Utama
 
