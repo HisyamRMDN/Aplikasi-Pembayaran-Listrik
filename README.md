@@ -1,4 +1,10 @@
-![VOLTPAY Test Suite](https://github.com/HisyamRMDN/https://github.com/HisyamRMDN/HSYM-Portfolio.git/actions/workflows/tests.yml/badge.svg)
+![VOLTPAY Test Suite]
+
+<div align="center">
+  <a href="" target="_blank">
+    <img src="public/image/mock-up.png" alt="Tampilan HSYM Portfolio" width="100%" />
+  </a>
+</div>
 
 # Sistem Pengelolaan Token Listrik
 
