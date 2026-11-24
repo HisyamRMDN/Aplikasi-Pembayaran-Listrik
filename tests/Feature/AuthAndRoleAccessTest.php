@@ -121,4 +121,54 @@ class AuthAndRoleAccessTest extends TestCase
             'password_confirmation' => 'password123',
         ])->assertStatus(429);
     }
+
+    public function test_administrator_dapat_mengelola_akun_petugas_dan_kasir_ditolak_403(): void
+    {
+        $levelAdmin = Level::create(['nama_level' => 'Administrator']);
+        $levelKasir = Level::create(['nama_level' => 'Petugas Loket']);
+
+        $admin = User::create([
+            'username' => 'super_admin',
+            'password' => bcrypt('password123'),
+            'nama_admin' => 'Super Admin',
+            'id_level' => $levelAdmin->id_level,
+        ]);
+
+        $kasir = User::create([
+            'username' => 'kasir_lama',
+            'password' => bcrypt('password123'),
+            'nama_admin' => 'Kasir Lama',
+            'id_level' => $levelKasir->id_level,
+        ]);
+
+        // Kasir ditolak 403 saat membuka manajemen petugas
+        $this->actingAs($kasir, 'web')
+            ->get(route('petugas.index'))
+            ->assertForbidden();
+
+        // Admin menambah petugas baru
+        $this->actingAs($admin, 'web')
+            ->post(route('petugas.store'), [
+                'nama_admin' => 'Kasir Baru',
+                'username' => 'kasir_baru',
+                'id_level' => $levelKasir->id_level,
+                'password' => 'rahasia123',
+                'password_confirmation' => 'rahasia123',
+            ])
+            ->assertRedirect(route('petugas.index'));
+
+        $this->assertDatabaseHas('users', [
+            'username' => 'kasir_baru',
+            'nama_admin' => 'Kasir Baru',
+        ]);
+
+        // Admin dicegah menghapus akunnya sendiri
+        $this->actingAs($admin, 'web')
+            ->delete(route('petugas.destroy', $admin->id_user))
+            ->assertRedirect(route('petugas.index'));
+
+        $this->assertDatabaseHas('users', [
+            'id_user' => $admin->id_user,
+        ]);
+    }
 }

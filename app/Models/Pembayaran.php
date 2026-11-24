@@ -22,7 +22,9 @@ class Pembayaran extends Model
         'dibatalkan_pada',
         'alasan_batal',
         'id_user_batal',
-        'id_user'
+        'id_user',
+        'midtrans_order_id',
+        'channel_pembayaran'
     ];
 
     protected $casts = [

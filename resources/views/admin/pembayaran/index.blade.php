@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends ('layouts.app')
 
-@section('title', 'Kelola Pembayaran — VOLTPAY')
+@section ('title', 'Kelola Pembayaran — VOLTPAY')
 
-@section('content')
+@section ('content')
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200 pb-6">
@@ -10,8 +10,10 @@
                 <h1 class="text-2xl font-bold tracking-tight text-zinc-950">Riwayat Pembayaran</h1>
                 <p class="text-sm text-zinc-500 mt-1">Catatan transaksi pelunasan tagihan listrik pelanggan</p>
             </div>
-            <a href="{{ route('pembayaran.create') }}"
-                class="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors self-start sm:self-auto">
+            <a
+                href="{{ route('pembayaran.create') }}"
+                class="inline-flex items-center gap-2 rounded-lg bg-zinc-950 px-3.5 py-2 text-xs font-semibold text-white hover:bg-zinc-800 transition-colors self-start sm:self-auto"
+            >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
@@ -22,7 +24,9 @@
         <x-flash-message />
 
         <!-- Metric Grid Ringkas -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-px bg-zinc-200 border border-zinc-200 rounded-xl overflow-hidden">
+        <div
+            class="grid grid-cols-1 sm:grid-cols-3 gap-px bg-zinc-200 border border-zinc-200 rounded-xl overflow-hidden"
+        >
             <div class="bg-white p-5">
                 <span class="text-xs font-medium text-zinc-500">Transaksi Hari Ini</span>
                 <p class="mt-3 text-2xl font-bold tracking-tight text-zinc-950 tabular-nums">
@@ -51,26 +55,47 @@
         <!-- Search & Filter -->
         <form method="GET" action="{{ route('pembayaran.index') }}" class="flex flex-col sm:flex-row gap-2.5">
             <div class="relative flex-1">
-                <svg class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-                    fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                <svg
+                    class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                    />
                 </svg>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pelanggan..."
-                    class="w-full rounded-lg border border-zinc-200 bg-white pl-10 pr-3.5 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-950 focus:outline-none">
+                <input
+                    type="text"
+                    name="search"
+                    value="{{ request('search') }}"
+                    placeholder="Cari nama pelanggan..."
+                    class="w-full rounded-lg border border-zinc-200 bg-white pl-10 pr-3.5 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-950 focus:outline-none"
+                />
             </div>
             <div>
-                <input type="date" name="tanggal" value="{{ request('tanggal') }}"
-                    class="w-full sm:w-auto rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-sm text-zinc-700 focus:border-zinc-950 focus:outline-none">
+                <input
+                    type="date"
+                    name="tanggal"
+                    value="{{ request('tanggal') }}"
+                    class="w-full sm:w-auto rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-sm text-zinc-700 focus:border-zinc-950 focus:outline-none"
+                />
             </div>
             <div class="flex items-center gap-2">
-                <button type="submit"
-                    class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 hover:border-zinc-300 transition-colors cursor-pointer">
+                <button
+                    type="submit"
+                    class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 hover:border-zinc-300 transition-colors cursor-pointer"
+                >
                     Filter
                 </button>
                 @if (request('search') || request('tanggal'))
-                    <a href="{{ route('pembayaran.index') }}"
-                        class="rounded-lg px-3 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors">
+                    <a
+                        href="{{ route('pembayaran.index') }}"
+                        class="rounded-lg px-3 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+                    >
                         Reset
                     </a>
                 @endif
@@ -84,29 +109,45 @@
                     <thead class="bg-zinc-50/70">
                         <tr>
                             <th
-                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                                No</th>
+                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
+                            >
+                                No
+                            </th>
                             <th
-                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                                Pelanggan</th>
+                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
+                            >
+                                Pelanggan
+                            </th>
                             <th
-                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                                Bulan Bayar</th>
+                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
+                            >
+                                Bulan Bayar
+                            </th>
                             <th
-                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                                Tanggal Bayar</th>
+                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
+                            >
+                                Tanggal Bayar
+                            </th>
                             <th
-                                class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                                Biaya Admin</th>
+                                class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
+                            >
+                                Biaya Admin
+                            </th>
                             <th
-                                class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                                Total Bayar</th>
+                                class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
+                            >
+                                Total Bayar
+                            </th>
                             <th
-                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                                Petugas</th>
+                                class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
+                            >
+                                petugas
+                            </th>
                             <th
-                                class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                                Aksi</th>
+                                class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
+                            >
+                                Aksi
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-100 bg-white">
@@ -127,52 +168,103 @@
                                     {{ $pembayaran->bulan_bayar }}
                                 </td>
                                 <td class="px-5 py-3.5 whitespace-nowrap text-zinc-600 tabular-nums">
-                                    {{ date('d/m/Y', strtotime($pembayaran->tanggal_pembayaran)) }}
+                                    {{
+                                        date(
+                                            'd/m/Y',
+                                            strtotime($pembayaran->tanggal_pembayaran),
+                                        )
+                                    }}
                                 </td>
                                 <td class="px-5 py-3.5 whitespace-nowrap text-right text-zinc-500 tabular-nums">
                                     Rp {{ number_format($pembayaran->biaya_admin, 0, ',', '.') }}
                                 </td>
                                 <td
-                                    class="px-5 py-3.5 whitespace-nowrap text-right font-semibold text-zinc-950 tabular-nums">
+                                    class="px-5 py-3.5 whitespace-nowrap text-right font-semibold text-zinc-950 tabular-nums"
+                                >
                                     Rp {{ number_format($pembayaran->total_bayar, 0, ',', '.') }}
                                 </td>
                                 <td class="px-5 py-3.5 whitespace-nowrap text-xs text-zinc-600">
-                                    {{ $pembayaran->user->nama_admin ?? ($pembayaran->user->name ?? 'N/A') }}
+                                    {{
+                                        $pembayaran->channel_pembayaran === 'midtrans'
+                                            ? 'Online Payment'
+                                            : $pembayaran->user?->nama_admin ?? '—'
+                                    }}
                                 </td>
                                 <td class="px-5 py-3.5 whitespace-nowrap text-right">
                                     <div class="inline-flex items-center justify-end gap-1">
-                                        <a href="{{ route('pembayaran.show', $pembayaran->id_pembayaran) }}"
+                                        <a
+                                            href="{{ route('pembayaran.show', $pembayaran->id_pembayaran) }}"
                                             title="Detail & struk"
-                                            class="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100 transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            class="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100 transition-colors"
+                                        >
+                                            <svg
+                                                class="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="1.75"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                                                />
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                                />
                                             </svg>
                                         </a>
-                                        <a href="{{ route('pembayaran.edit', $pembayaran->id_pembayaran) }}"
+                                        <a
+                                            href="{{ route('pembayaran.edit', $pembayaran->id_pembayaran) }}"
                                             title="Edit pembayaran"
-                                            class="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100 transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                            class="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100 transition-colors"
+                                        >
+                                            <svg
+                                                class="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="1.75"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                                                />
                                             </svg>
                                         </a>
-                                        <form action="{{ route('pembayaran.destroy', $pembayaran->id_pembayaran) }}"
-                                            method="POST" class="inline"
-                                            onsubmit="const a = prompt('Alasan pembatalan pembayaran (wajib diisi):'); if (!a || !a.trim()) { return false; } this.alasan.value = a.trim(); return true;">
+                                        <form
+                                            action="{{ route('pembayaran.destroy', $pembayaran->id_pembayaran) }}"
+                                            data-confirm-title="Batalkan Pembayaran"
+                                            data-confirm="Tindakan ini akan mengembalikan status tagihan menjadi Belum Lunas. Masukkan alasan pembatalan:"
+                                            data-confirm-text="Ya, Batalkan"
+                                            data-confirm-prompt="alasan"
+                                            data-confirm-placeholder="Contoh: Salah input tagihan pelanggan..."
+                                            method="POST"
+                                            class="inline"
+                                        >
                                             @csrf
-                                            @method('DELETE')
-                                            <input type="hidden" name="alasan" value="">
-                                            <button type="submit" title="Batalkan pembayaran"
-                                                class="p-1.5 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    stroke-width="1.75" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                                            @method ('DELETE')
+                                            <input type="hidden" name="alasan" value="" />
+                                            <button
+                                                type="submit"
+                                                title="Batalkan pembayaran"
+                                                class="p-1.5 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                            >
+                                                <svg
+                                                    class="w-4 h-4"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.75"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                                                    />
                                                 </svg>
                                             </button>
                                         </form>
@@ -191,9 +283,7 @@
             </div>
 
             @if ($pembayarans->hasPages())
-                <div class="px-5 py-3.5 border-t border-zinc-200 bg-zinc-50/40">
-                    {{ $pembayarans->links() }}
-                </div>
+                <div class="px-5 py-3.5 border-t border-zinc-200 bg-zinc-50/40">{{ $pembayarans->links() }}</div>
             @endif
         </div>
     </div>
