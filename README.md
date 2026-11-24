@@ -1,4 +1,3 @@
-![VOLTPAY Test Suite]
 
 <div align="center">
   <a href="" target="_blank">
