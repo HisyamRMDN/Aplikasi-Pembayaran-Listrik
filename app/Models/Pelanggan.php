@@ -12,25 +12,21 @@ class Pelanggan extends Authenticatable
     use HasFactory;
     protected $primaryKey = 'id_pelanggan';
 
-    protected $fillable = [
-        'username',
-        'password',
-        'nomor_kwh',
-        'nama_pelanggan',
-        'alamat',
-        'id_tarif'
-    ];
+    protected $fillable = ['username', 'password', 'nomor_kwh', 'nama_pelanggan', 'alamat', 'id_tarif'];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
     protected $casts = [
         'password' => 'hashed',
     ];
 
     // Override username field for authentication
+
+        public function isAdministrator(): bool
+    {
+        return false;
+    }
+
     public function getAuthIdentifierName()
     {
         return 'username';
