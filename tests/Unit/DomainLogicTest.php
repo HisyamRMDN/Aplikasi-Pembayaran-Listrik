@@ -56,4 +56,6 @@ class DomainLogicTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+
 }

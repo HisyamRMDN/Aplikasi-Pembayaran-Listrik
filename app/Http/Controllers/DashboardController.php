@@ -56,11 +56,21 @@ class DashboardController extends Controller
             ->where('status', 'belum_lunas')
             ->count();
 
+        $pembayaranDibatalkan = Pembayaran::with('tagihan')
+            ->where('id_pelanggan', $pelanggan->id_pelanggan)
+            ->where('status', 'batal')
+            ->whereHas('tagihan', function ($q) {
+                $q->where('status', 'belum_lunas');
+            })
+            ->latest('dibatalkan_pada')
+            ->get();
+
         return view('dashboard.pelanggan', compact(
             'pelanggan',
             'penggunaan',
             'tagihan',
-            'tagihanBelumLunas'
+            'tagihanBelumLunas',
+            'pembayaranDibatalkan'
         ));
     }
 }

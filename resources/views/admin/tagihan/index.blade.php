@@ -229,9 +229,11 @@
                                             </a>
                                             <form
                                                 action="{{ route('tagihan.destroy', $tagihan->id_tagihan) }}"
+                                                data-confirm-title="Hapus Data Penggunaan"
+                                                data-confirm="Hapus data penggunaan ini? Tagihan terkait juga akan terhapus."
+                                                data-confirm-text="Ya, Hapus Data"
                                                 method="POST"
                                                 class="inline"
-                                                onsubmit="return confirm('Yakin ingin menghapus tagihan manual ini?');"
                                             >
                                                 @csrf
                                                 @method ('DELETE')

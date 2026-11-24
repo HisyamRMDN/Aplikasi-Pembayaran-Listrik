@@ -187,13 +187,19 @@ class PembayaranController extends Controller
     public function pelangganTagihan()
     {
         $pelanggan = Auth::guard('pelanggan')->user();
-        $tagihans = Tagihan::with(['penggunaan', 'pelanggan.tarif'])
-            ->where('id_pelanggan', $pelanggan->id_pelanggan)
-            ->orderBy('tahun', 'desc')
-            ->orderBy('bulan', 'desc')
-            ->get();
+    $tagihans = Tagihan::with([
+            'penggunaan',
+            'pelanggan.tarif',
+            'pembayarans' => function ($q) {
+                $q->where('status', 'batal')->latest('dibatalkan_pada');
+            },
+        ])
+        ->where('id_pelanggan', $pelanggan->id_pelanggan)
+        ->orderBy('tahun', 'desc')
+        ->orderBy('bulan', 'desc')
+        ->get();
 
-        return view('pelanggan.tagihan', compact('tagihans'));
+    return view('pelanggan.tagihan', compact('tagihans'));
     }
 
     private function getNamaBulan($bulan)

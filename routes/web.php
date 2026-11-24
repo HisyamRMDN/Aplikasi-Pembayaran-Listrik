@@ -10,6 +10,7 @@ use App\Http\Controllers\PembayaranController;
 use App\Http\Middleware\CheckLevel;
 use App\Http\Controllers\TarifController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\PetugasController;
 
 // Public routes
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
@@ -53,10 +54,11 @@ Route::middleware('ensure.auth:web')->group(function () {
 
     // Khusus Administrator
     Route::middleware('admin.only')->group(function () {
-        Route::resource('pelanggan', PelangganController::class);
-        Route::resource('tarif', TarifController::class);
-        Route::delete('/pembayaran/{pembayaran}', [PembayaranController::class, 'destroy'])->name('pembayaran.destroy');
-    });
+    Route::resource('pelanggan', PelangganController::class);
+    Route::resource('tarif', TarifController::class);
+    Route::resource('petugas', PetugasController::class)->except(['show']);
+    Route::delete('/pembayaran/{pembayaran}', [PembayaranController::class, 'destroy'])->name('pembayaran.destroy');
+});
 });
 
 Route::middleware('ensure.auth:pelanggan')->group(function () {
