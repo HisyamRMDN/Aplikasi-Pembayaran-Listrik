@@ -12,11 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
     )
 
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->validateCsrfTokens(except: [
+        'webhooks/midtrans',
+    ]);
     $middleware->alias([
         'ensure.auth' => \App\Http\Middleware\EnsureUserIsAuthenticated::class,
         'admin.only' => \App\Http\Middleware\EnsureAdministrator::class,
     ]);
 })
+
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
+

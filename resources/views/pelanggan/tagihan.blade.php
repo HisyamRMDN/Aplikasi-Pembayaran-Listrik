@@ -109,7 +109,13 @@
                                             Cetak Struk
                                         </a>
                                     @else
-                                        <span class="text-xs text-zinc-400">Bayar di loket</span>
+                                        <button
+                                            type="button"
+                                            data-midtrans-pay="{{ route('pelanggan.tagihan.midtrans-token', $tagihan->id_tagihan) }}"
+                                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                                        >
+                                            Bayar Online
+                                        </button>
                                     @endif
                                 </td>
                             </tr>
@@ -150,3 +156,50 @@
         </div>
     </div>
 @endsection
+
+<script
+    src="https://app.sandbox.midtrans.com/snap/snap.js"
+    data-client-key="{{ config('midtrans.client_key') }}"
+></script>
+<script>
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-midtrans-pay]');
+        if (!btn) return;
+
+        const url = btn.dataset.midtransPay;
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Memuat...';
+
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN':
+                        document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                    Accept: 'application/json',
+                },
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Gagal memulai pembayaran.');
+
+            window.snap.pay(data.snap_token, {
+                onSuccess: function () {
+                    window.location.reload();
+                },
+                onPending: function () {
+                    window.location.reload();
+                },
+                onError: function () {
+                    alert('Pembayaran gagal diproses oleh gateway.');
+                },
+            });
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    });
+</script>

@@ -141,7 +141,7 @@
                             <th
                                 class="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
                             >
-                                Petugas
+                                petugas
                             </th>
                             <th
                                 class="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
@@ -185,8 +185,9 @@
                                 </td>
                                 <td class="px-5 py-3.5 whitespace-nowrap text-xs text-zinc-600">
                                     {{
-                                        $pembayaran->user->nama_admin ??
-                                            ($pembayaran->user->name ?? 'N/A')
+                                        $pembayaran->channel_pembayaran === 'midtrans'
+                                            ? 'Online Payment'
+                                            : $pembayaran->user?->nama_admin ?? '—'
                                     }}
                                 </td>
                                 <td class="px-5 py-3.5 whitespace-nowrap text-right">

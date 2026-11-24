@@ -96,14 +96,27 @@
                         </div>
 
                         <div>
-                            <p class="text-xs text-zinc-400">Petugas Loket</p>
+                            <p class="text-xs text-zinc-400">Kanal & Petugas</p>
                             <p class="font-medium text-zinc-900 mt-0.5">
-                                {{
-                                    $pembayaran->user->nama_admin ??
-                                        ($pembayaran->user->name ?? 'N/A')
-                                }}
+                                @if ($pembayaran->channel_pembayaran === 'midtrans')
+                                    Online — Midtrans
+                                @else
+                                    {{
+                                        $pembayaran->user?->nama_admin ??
+                                            ($pembayaran->user?->name ?? 'Loket Resmi')
+                                    }}
+                                @endif
                             </p>
                         </div>
+
+                        @if ($pembayaran->midtrans_order_id)
+                            <div class="col-span-2">
+                                <p class="text-xs text-zinc-400">Order ID Midtrans</p>
+                                <p class="font-mono text-xs font-medium text-zinc-900 mt-0.5">
+                                    {{ $pembayaran->midtrans_order_id }}
+                                </p>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

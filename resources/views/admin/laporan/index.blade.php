@@ -178,7 +178,13 @@
                                 <td class="px-4 py-3 text-right font-semibold text-zinc-950 tabular-nums">
                                     Rp {{ number_format($p->total_bayar, 0, ',', '.') }}
                                 </td>
-                                <td class="px-4 py-3 text-xs text-zinc-600">{{ $p->user?->nama_admin ?? '-' }}</td>
+                                <td class="px-4 py-3 text-xs text-zinc-600">
+                                    {{
+                                        $p->channel_pembayaran === 'midtrans'
+                                            ? 'Online Payment'
+                                            : $p->user?->nama_admin ?? '—'
+                                    }}
+                                </td>
                             </tr>
                         @empty
                             <tr>

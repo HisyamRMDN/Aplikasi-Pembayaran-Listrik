@@ -11,6 +11,7 @@ use App\Http\Middleware\CheckLevel;
 use App\Http\Controllers\TarifController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PetugasController;
+use App\Http\Controllers\MidtransController;
 
 // Public routes
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
@@ -67,6 +68,8 @@ Route::middleware('ensure.auth:pelanggan')->group(function () {
     Route::get('/customer/tagihan/{id}/struk', [PelangganController::class, 'struk'])->name('pelanggan.tagihan.struk');
     Route::get('/customer/penggunaan', [PelangganController::class, 'riwayatPenggunaan'])->name('pelanggan.penggunaan');
     Route::get('/customer/tarif', [TarifController::class, 'pelangganIndex'])->name('pelanggan.tarif');
+    Route::post('/customer/tagihan/{id}/midtrans-token', [MidtransController::class, 'createSnapToken'])
+    ->name('pelanggan.tagihan.midtrans-token');
 
     // Profil & Ganti Password Pelanggan
     Route::get('/customer/profil', [PelangganController::class, 'editProfil'])->name('pelanggan.profil.edit');
@@ -75,3 +78,6 @@ Route::middleware('ensure.auth:pelanggan')->group(function () {
         'pelanggan.profil.password',
     );
 });
+
+Route::post('/webhooks/midtrans', [MidtransController::class, 'webhook'])
+    ->name('webhooks.midtrans');
